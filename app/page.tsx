@@ -32,6 +32,9 @@ export default async function Home({
         </p>
       </aside>
       <SyncStatus state="disconnected" />
+      <footer>
+        <a href="/privacy">隱私權政策</a>
+      </footer>
     </main>
   );
 }

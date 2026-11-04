@@ -1151,3 +1151,32 @@ a.button {
   min-width: 24px;
   text-align: center;
 }
+
+.privacy-content {
+  font-size: 14px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.privacy-content section + section {
+  margin-top: 28px;
+}
+.privacy-content h2 {
+  margin: 20px 0 12px;
+  font-size: 18px;
+  color: var(--green);
+}
+.privacy-content p {
+  margin: 12px 0;
+}
+.privacy-content ul {
+  padding-left: 22px;
+  list-style: disc;
+}
+.privacy-content li + li {
+  margin-top: 8px;
+}
+.privacy-content a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
