@@ -1,6 +1,6 @@
 # Redis Session 設定（免費方案）
 
-此階段加入 Redis AuthStore，先在本機驗證。尚未解除 production 限制，也尚未部署。建立旅行流程的暫存進度目前仍在記憶體；正式部署前需一併處理。
+已在本機驗證真實 Redis 加密讀寫與一次性取用。HTTPS 正式環境於完整設定 Redis 後可啟用登入；建立流程進度也使用 Redis。尚未執行正式部署，見 vercel-deployment.md。
 
 1. 到 https://console.upstash.com/ 註冊／登入。
 2. 建立 Redis database，選 Free。不要加入付款方式、不要選付費方案。若畫面要求付款，先停止。

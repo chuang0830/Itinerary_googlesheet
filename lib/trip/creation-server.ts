@@ -5,9 +5,13 @@ import { authConfig } from '@/lib/auth/config';
 import { AuthError, requireSameOrigin } from '@/lib/auth/core';
 import { authService, SESSION_COOKIE, privateHeaders } from '@/lib/auth/server';
 import { CreationError, CreationService } from './creation';
+import { RedisCreationService } from './redis-creation';
+import { redisCommand } from '@/lib/auth/redis-store';
 import { TripInputError, validRequestKey } from './create-schema';
 const globals = globalThis as typeof globalThis & { travelCreationService?: CreationService };
-export function creationService() { globals.travelCreationService ??= new CreationService(); return globals.travelCreationService; }
+export function creationService() {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) return new RedisCreationService(redisCommand(process.env.UPSTASH_REDIS_REST_URL, process.env.UPSTASH_REDIS_REST_TOKEN));
+  globals.travelCreationService ??= new CreationService(); return globals.travelCreationService; }
 export async function creationOwner(request: NextRequest, write = false) {
   const config = authConfig();
   if (!config) throw new CreationError('local_only', 503);
@@ -43,8 +47,8 @@ export function creationFailure(error: unknown) {
   if (error instanceof TripInputError) return NextResponse.json({ error: error.message }, { status: 400, headers: privateHeaders });
   if (error instanceof AuthError) return NextResponse.json({ error: error.code === 'invalid_flow' ? '請從本站提交表單。' : '請重新登入 Google。' }, { status: error.code === 'invalid_flow' ? 403 : 401, headers: privateHeaders });
   if (error instanceof CreationError) {
-    const labels: Record<string, string> = { operation_not_found: '找不到建立進度。若本機伺服器曾重啟，請先到 Google Drive 確認是否已建立，避免重複。',
-      request_changed: '此請求已提交過，請先查詢建立進度。', local_only: '目前只支援本機開發環境。', google_grant_required: '請先重新授權 Google 檔案存取。' };
+    const labels: Record<string, string> = { operation_not_found: '找不到建立進度。若建立進度已到期或伺服器曾重啟，請先到 Google Drive 確認是否已建立，避免重複。',
+      request_changed: '此請求已提交過，請先查詢建立進度。', local_only: '登入服務設定尚未完成。', google_grant_required: '請先重新授權 Google 檔案存取。' };
     return NextResponse.json({ error: labels[error.code] || '暫時無法處理此請求。', code: error.code }, { status: error.status, headers: privateHeaders });
   }
   return NextResponse.json({ error: '暫時無法處理，請查詢建立進度後再嘗試。' }, { status: 503, headers: privateHeaders });

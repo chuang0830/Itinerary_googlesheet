@@ -15,6 +15,6 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const owner = await creationOwner(request);
-    return NextResponse.json(creationService().status(owner, requestKey(request.nextUrl.searchParams.get('requestKey'))), { headers: privateHeaders });
+    return NextResponse.json(await creationService().status(owner, requestKey(request.nextUrl.searchParams.get('requestKey'))), { headers: privateHeaders });
   } catch (error) { return creationFailure(error); }
 }

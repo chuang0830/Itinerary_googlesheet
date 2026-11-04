@@ -64,3 +64,7 @@ Phase 5 實際瀏覽器驗證：原帳號可進入 Edit；新增、輸入、鍵�
 使用者已確認新增行程 Done 儲存、拖曳後 Sheets 列順序，以及 Cancel 不寫入均通過。多人帳號與撤銷權限仍待驗證。分享入口保留主畫面 Share，已移除選單分享項目。
 
 上傳 GitHub 不代表已可正式部署：目前登入限本機；Vercel 前仍需處理正式 Session 與 OAuth 網址設定。`.env.local` 不可提交，部署時另設環境變數。
+
+## 正式環境準備更新
+
+已加入加密 Redis Session、Redis 建立請求進度、HTTPS 正式登入設定檢查，以及新加坡 Functions 區域。77 項自動測試與正式建置通過。真實 Redis 加密讀寫、清除已驗證；使用者已重新登入。尚未部署與驗證跨程序登入保存、第二帳號權限。最新部署步驟見 [Vercel 部署](docs/vercel-deployment.md)。此段取代前文僅限本機登入的舊狀態描述。

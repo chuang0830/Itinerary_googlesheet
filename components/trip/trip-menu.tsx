@@ -2,6 +2,16 @@
 import { useEffect, useRef, useState } from 'react';
 export function TripMenu({ spreadsheetId, disabled = false }: { spreadsheetId: string; disabled?: boolean; tripName?: string }) {
   const [open, setOpen] = useState(false); const root = useRef<HTMLDivElement>(null); const button = useRef<HTMLButtonElement>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    fetch('/api/auth/session', { cache: 'no-store', signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error(); return response.json(); })
+      .then(data => setSignedIn(Boolean(data.session)))
+      .catch(() => { if (!controller.signal.aborted) setSignedIn(null); });
+    return () => controller.abort();
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     function close(event: PointerEvent) { if (!root.current?.contains(event.target as Node)) setOpen(false); }
@@ -19,6 +29,8 @@ export function TripMenu({ spreadsheetId, disabled = false }: { spreadsheetId: s
       <a href={`/${spreadsheetId}/settings`}>⚙️ Settings · 網站設定</a>
       <hr />
       <a target="_blank" rel="noopener noreferrer" href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`}>📊 Open Google Sheets ↗</a>
+      {signedIn === true && <form action="/api/auth/signout" method="post"><button type="submit" className="menu-action">登出</button></form>}
+      {signedIn === false && <a href="/">Google 登入</a>}
     </nav>}
   </div>;
 }

@@ -25,8 +25,8 @@ export function AuthPanel({ configured, session, error }: {
         <form action="/api/auth/signin" method="post"><button className="button button-primary" disabled={!configured}>Google 登入</button></form>
         <button className="button" disabled>建立新旅行（下一階段開放）</button>
       </div>
-      {!configured && <p className="phase-note">Google 登入尚未啟用，請先完成本機環境設定。</p>}
+      {!configured && <p className="phase-note">Google 登入尚未啟用，請先完成網站環境設定。</p>}
     </>}
-    <p className="phase-note">本機開發版：登入狀態最長保留 24 小時，伺服器重啟後需重新登入。行程讀取與編輯功能將於後續階段開放。</p>
+    <p className="phase-note">登入狀態最長保留 24 小時。旅行資料儲存在 Google Sheets。</p>
   </section>;
 }
