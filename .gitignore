@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.env*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+
+# Deployment metadata and local credentials
+.vercel/
+*.pem
+*.key
