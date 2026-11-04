@@ -6,12 +6,12 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
   const [editors, setEditors] = useState<TripEditor[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'private' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [memberError, setMemberError] = useState('');
   useEffect(() => {
     const controller = new AbortController();
     setState('loading');
+    setMemberError('');
     setEditors([]);
-    setSignedIn(null);
     async function load() {
       try {
         const sessionResponse = await fetch('/api/auth/session', {
@@ -21,7 +21,6 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
         if (!sessionResponse.ok) throw new Error();
         const { session } = await sessionResponse.json();
         if (controller.signal.aborted) return;
-        setSignedIn(Boolean(session));
         if (!session) {
           setState('private');
           return;
@@ -31,12 +30,21 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
           signal: controller.signal,
         });
         if (controller.signal.aborted) return;
+        const data = await response.json();
         if (response.status === 401 || response.status === 403) {
-          setState('private');
+          setMemberError(
+            response.status === 403
+              ? 'Google 未允許目前帳號讀取成員名單；你仍可查看公開行程。'
+              : data.error || '登入狀態已失效；你仍可查看公開行程。',
+          );
+          setState('error');
           return;
         }
-        if (!response.ok) throw new Error();
-        const data = await response.json();
+        if (!response.ok) {
+          setMemberError(data.error || '目前帳號無法讀取成員資訊。');
+          setState('error');
+          return;
+        }
         if (!controller.signal.aborted) {
           setEditors(data.editors);
           setState('ready');
@@ -62,49 +70,15 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
           </span>
         ))}
         <span className="companions-label">
-          {signedIn === false ? 'who is sharing trip board ?' : 'Shared trip board'}
+          {state === 'ready' && editors.length > 0
+            ? 'Shared trip board'
+            : 'who is sharing trip board ?'}
         </span>
         {state === 'loading' && <span role="status">讀取中…</span>}
       </div>
-      {state === 'ready' && (
-        <details className="editors-details">
-          <summary>{editors.length} 位／組可編輯成員</summary>
-          <ul>
-            {editors.map((editor) => (
-              <li key={editor.key}>
-                <span>{editor.displayName}</span>
-                <small>
-                  {editor.role === 'owner'
-                    ? '擁有者'
-                    : editor.kind === 'group'
-                      ? '群組編輯權限'
-                      : editor.kind === 'domain'
-                        ? '網域編輯權限'
-                        : '編輯者'}
-                </small>
-              </li>
-            ))}
-          </ul>
-          {editors.some((editor) => editor.kind !== 'user') && (
-            <p>群組與網域顯示授權對象，未展開其中的個別成員。</p>
-          )}
-          <button
-            type="button"
-            className="button button-quiet"
-            onClick={() => setAttempt((value) => value + 1)}
-          >
-            更新名單
-          </button>
-        </details>
-      )}
-      {state === 'private' && (
-        <p className="editors-note">
-          登入並授權存取這份旅行後可查看成員；能否編輯仍依 Google Sheets 權限。
-        </p>
-      )}
       {state === 'error' && (
         <p className="editors-note" role="status">
-          暫時無法讀取成員。
+          {memberError || '暫時無法讀取成員。'}
           <button
             type="button"
             className="editors-retry"

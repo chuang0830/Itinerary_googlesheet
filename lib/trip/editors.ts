@@ -55,12 +55,17 @@ export async function readTripEditors(
     }
     if (!response.ok)
       throw new ItineraryError(
-        '無法查看編輯者名單，請確認 Google 檔案權限。',
+        response.status === 403 || response.status === 404
+          ? 'Google 未允許目前帳號讀取成員名單；你仍可查看公開行程。'
+          : '暫時無法讀取成員名單，請重試。',
         response.status === 401
           ? 401
           : response.status === 403 || response.status === 404
             ? 403
             : 503,
+        response.status === 403 || response.status === 404
+          ? 'members_access_denied'
+          : 'members_unavailable',
       );
     const data = (await response.json()) as { permissions?: Permission[]; nextPageToken?: string };
     if (!Array.isArray(data.permissions))

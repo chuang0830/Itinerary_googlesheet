@@ -20,7 +20,7 @@ export async function continueTripSignIn(
     return checkTripFileAccess(id, await service.accessToken(sessionId));
   });
   if (decision.selectFile && target) {
-    const flow = await service.beginFile(sessionId, target.id, target.path);
+    const flow = await service.beginFile(sessionId, target.id, decision.path);
     const response = NextResponse.redirect(flow.url, { status: 303, headers: privateHeaders });
     response.cookies.set(FLOW_COOKIE, flow.id, { ...cookieOptions, maxAge: FLOW_TTL_MS / 1000 });
     return response;

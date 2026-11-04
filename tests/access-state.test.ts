@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { tripAccessState } from '../lib/trip/access-state';
-test('signed-in users missing Google grant get authorization instead of another login prompt', () => {
+import { READ_ONLY_NOTICE, tripAccessState } from '../lib/trip/access-state';
+test('signed-in users without confirmed edit access stay read-only without a repeated login prompt', () => {
   const state = tripAccessState(403, { code: 'google_grant_required', error: 'Grant required' });
-  assert.equal(state.needsAuthorization, true);
+  assert.equal(state.needsAuthorization, false);
   assert.equal(state.needsLogin, false);
   assert.equal(state.canEdit, false);
-  assert.equal(state.error, 'Grant required');
+  assert.equal(state.error, READ_ONLY_NOTICE);
 });
 test('file permissions and outages never request repeated sign-in', () => {
   for (const status of [403, 503]) {
@@ -14,8 +14,16 @@ test('file permissions and outages never request repeated sign-in', () => {
     assert.equal(state.needsLogin, false);
     assert.equal(state.needsAuthorization, false);
     assert.equal(state.canEdit, false);
-    assert.equal(state.error, 'Access unavailable');
+    assert.equal(state.error, status === 403 ? READ_ONLY_NOTICE : 'Access unavailable');
   }
   assert.equal(tripAccessState(401, {}).needsLogin, true);
   assert.equal(tripAccessState(200, { canEdit: true }).canEdit, true);
+});
+
+test('confirmed viewers always receive the same read-only message', () => {
+  const state = tripAccessState(200, { canEdit: false });
+  assert.equal(state.error, READ_ONLY_NOTICE);
+  assert.equal(state.canEdit, false);
+  assert.equal(state.needsAuthorization, false);
+  assert.equal(state.needsLogin, false);
 });

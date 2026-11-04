@@ -46,10 +46,17 @@ export async function tripEntryDecision(
   const target = tripSignInTarget(returnTo);
   if (!target) return { path: safeReturnTo(returnTo), selectFile: false };
   const access = await check(target.id);
-  if (access === 'needs_file' && !selectionCompleted)
-    return { path: target.path, selectFile: true, id: target.id };
   const path = new URL(target.path, 'https://local.invalid');
+  path.searchParams.delete('accessNotice');
+  path.searchParams.delete('authError');
+  const destination = `${path.pathname}${path.search}${path.hash}`;
+  // Only confirmed editors continue to the file picker. Unknown access never grants entry.
+  if (access === 'editor' && !selectionCompleted)
+    return { path: destination, selectFile: true, id: target.id };
   if (access !== 'editor')
-    path.searchParams.set('accessNotice', access === 'reader' ? 'readonly' : 'unavailable');
+    path.searchParams.set(
+      'accessNotice',
+      access === 'reader' ? 'readonly' : selectionCompleted ? 'unavailable' : 'permission_unknown',
+    );
   return { path: `${path.pathname}${path.search}${path.hash}`, selectFile: false };
 }

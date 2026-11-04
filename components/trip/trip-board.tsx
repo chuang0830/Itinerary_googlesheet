@@ -1,4 +1,6 @@
 'use client';
+import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
+import { AccountAvatar } from '@/components/auth/account-avatar';
 import { TripAccessNotice } from './trip-access-notice';
 import { TripMenu } from './trip-menu';
 import { TripEditors } from './trip-editors';
@@ -155,8 +157,14 @@ export function TripBoard({
               </button>
             </>
           )}
+          <AccountAvatar />
         </div>
       </header>
+      {editor.error === READ_ONLY_NOTICE && (
+        <aside className="auth-message" role="status">
+          {READ_ONLY_NOTICE}
+        </aside>
+      )}
       <TripAccessNotice />
       {settings && (
         <section className="intro" id="top">
@@ -187,9 +195,9 @@ export function TripBoard({
           </button>
         </section>
       )}
-      {editor.error && (
+      {editor.error && (editor.error !== READ_ONLY_NOTICE || editor.editing) && (
         <section className="auth-message" role="alert">
-          <p>{editor.error}</p>
+          {editor.error !== READ_ONLY_NOTICE && <p>{editor.error}</p>}
           {editor.editing && (
             <>
               <button

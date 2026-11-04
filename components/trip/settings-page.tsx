@@ -1,4 +1,6 @@
 'use client';
+import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
+import { AccountAvatar } from '@/components/auth/account-avatar';
 import { TripAccessNotice } from './trip-access-notice';
 import { tripAccessState } from '@/lib/trip/access-state';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -204,17 +206,23 @@ export function SettingsPage({
               </button>
             </>
           )}
+          <AccountAvatar />
         </div>
       </header>
+      {error === READ_ONLY_NOTICE && (
+        <aside className="auth-message" role="status">
+          {READ_ONLY_NOTICE}
+        </aside>
+      )}
       <TripAccessNotice />
       <section className="intro">
         <div className="eyebrow">{settings?.tripName || 'TRAVEL PLANNER'}</div>
         <h1>Settings · 網站設定</h1>
         <p>調整旅行資訊與主題色，按 Done 後套用。</p>
       </section>
-      {error && (
+      {error && (error !== READ_ONLY_NOTICE || editing) && (
         <section className="auth-message" role="alert">
-          <p>{error}</p>
+          {error !== READ_ONLY_NOTICE && <p>{error}</p>}
           {editing && (
             <>
               <button

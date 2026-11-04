@@ -9,19 +9,19 @@ test('only known trip paths qualify, not external URLs, auth routes or homepage'
   assert.equal(tripSignInTarget(`/${id}/unknown`), null);
   assert.deepEqual(tripSignInTarget(`/${id}/settings`), { id, path: `/${id}/settings` });
 });
-test('checks before choosing a file and skips picker for existing editors', async () => {
+test('only confirmed editors continue to file selection after the backend check', async () => {
   const order: string[] = [];
   const decision = await tripEntryDecision(`/${id}`, false, async (file) => {
     order.push('checked');
     assert.equal(file, id);
-    return 'needs_file';
+    return 'editor';
   });
   assert.deepEqual(order, ['checked']);
   assert.equal(decision.selectFile, true);
   assert.equal(decision.id, id);
-  const editor = await tripEntryDecision(`/${id}`, false, async () => 'editor');
-  assert.equal(editor.selectFile, false);
-  assert.equal(editor.path, `/${id}`);
+  const unknown = await tripEntryDecision(`/${id}`, false, async () => 'needs_file');
+  assert.equal(unknown.selectFile, false);
+  assert.equal(unknown.path, `/${id}?accessNotice=permission_unknown`);
 });
 test('known readers stay read-only and completed selections never loop into picker', async () => {
   const reader = await tripEntryDecision(`/${id}/settings`, false, async () => 'reader');
@@ -67,4 +67,14 @@ test('Google capability check uses current token and differentiates file access,
     checkTripFileAccess(id, 'token', async () => new Response('', { status: 401 })),
     { code: 'reauth_required' },
   );
+});
+
+test('after file selection confirmed editors return once and stale notices are removed', async () => {
+  const result = await tripEntryDecision(
+    `/${id}/settings?accessNotice=readonly&authError=failed&view=trip`,
+    true,
+    async () => 'editor',
+  );
+  assert.equal(result.selectFile, false);
+  assert.equal(result.path, `/${id}/settings?view=trip`);
 });

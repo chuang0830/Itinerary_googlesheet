@@ -1,4 +1,6 @@
 'use client';
+import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
+import { AccountAvatar } from '@/components/auth/account-avatar';
 import { TripAccessNotice } from './trip-access-notice';
 import { tripAccessState } from '@/lib/trip/access-state';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -272,8 +274,14 @@ export function ManagedPage({
               </button>
             </>
           )}
+          <AccountAvatar />
         </div>
       </header>
+      {error === READ_ONLY_NOTICE && (
+        <aside className="auth-message" role="status">
+          {READ_ONLY_NOTICE}
+        </aside>
+      )}
       <TripAccessNotice />
       <section className="intro">
         <div className="eyebrow">{trip?.settings.tripName || 'TRAVEL PLANNER'}</div>
@@ -284,9 +292,9 @@ export function ManagedPage({
             : '可新增多筆交通，出發與抵達日都會顯示在每日資訊卡。'}
         </p>
       </section>
-      {error && (
+      {error && (error !== READ_ONLY_NOTICE || editing) && (
         <section className="auth-message" role="alert">
-          <p>{error}</p>
+          {error !== READ_ONLY_NOTICE && <p>{error}</p>}
           {editing && (
             <>
               <button

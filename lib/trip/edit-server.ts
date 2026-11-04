@@ -1,6 +1,7 @@
 import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
 import { creationOwner } from './creation-server';
+import { READ_ONLY_NOTICE } from './access-state';
 import { publicTrip } from '@/lib/google/public-trip';
 import { ItineraryError } from './edit-schema';
 import { TripReadError } from './read';
@@ -43,6 +44,7 @@ export function editFailure(error: unknown) {
           ? '登入狀態已失效，請重新登入，未儲存的草稿仍會保留。'
           : '請從本站提交。';
   }
+  if (status === 403 && code !== 'invalid_flow') message = READ_ONLY_NOTICE;
   return NextResponse.json(
     { error: message, ...(code ? { code } : {}) },
     { status, headers: editHeaders },
