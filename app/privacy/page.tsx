@@ -36,7 +36,8 @@ export default function PrivacyPage() {
               Settings、Itinerary、Accommodation、Transportation，提供旅行資訊、排序、住宿、交通與設定功能。
             </li>
             <li>
-              檔案權限與協作者資訊：確認目前帳號是否可以編輯，並向有編輯權限的使用者顯示協作者名字、角色及帳號首字。
+              檔案權限與協作者資訊：確認目前帳號是否可以編輯，並向已登入且經 Google
+              允許存取該檔案的使用者顯示協作者名字、角色及帳號首字。
             </li>
           </ul>
           <p>
@@ -52,7 +53,8 @@ export default function PrivacyPage() {
           </p>
           <p>
             編輯權限由 Google Sheets／Drive
-            管理，網站的每次寫入使用目前登入者自己的授權。分享網站網址不會自動授予編輯權限。公開頁面不提供協作者名單給未登入或唯讀訪客。
+            管理，網站的每次寫入使用目前登入者自己的授權。分享網站網址不會自動授予編輯權限。未登入訪客不會取得協作者名單；已登入的唯讀使用者可查看
+            Google 允許提供的成員資訊，但不能因此編輯。
           </p>
         </section>
         <section>

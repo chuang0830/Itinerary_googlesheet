@@ -125,3 +125,24 @@ test('wrong Google account or logout cannot overwrite the original identity', as
   );
   assert.equal(f.store.getSession(f.sessionId), null);
 });
+
+test('cancelled selection returns to original trip subpage and preserves the existing session', async () => {
+  const f = fixture();
+  const path = `/${file}/settings`;
+  const flow = await f.service.beginFile(f.sessionId, file, path);
+  await assert.rejects(
+    f.service.complete({
+      state: flow.id,
+      cookie: flow.id,
+      code: '',
+      denied: true,
+      previousSession: f.sessionId,
+    }),
+    (error: unknown) => {
+      assert.equal((error as { returnTo: string }).returnTo, path);
+      return true;
+    },
+  );
+  assert.equal(f.exchanges(), 0);
+  assert.equal(f.store.getSession(f.sessionId)?.tokens.accessToken, 'old');
+});

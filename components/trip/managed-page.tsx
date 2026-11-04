@@ -1,4 +1,5 @@
 'use client';
+import { TripAccessNotice } from './trip-access-notice';
 import { tripAccessState } from '@/lib/trip/access-state';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { TripMenu } from './trip-menu';
@@ -241,6 +242,14 @@ export function ManagedPage({
             </>
           ) : (
             <>
+              {(needsLogin || needsAuthorization) && (
+                <form action="/api/auth/signin" method="post">
+                  <input type="hidden" name="returnTo" value={`/${spreadsheetId}/${slug}`} />
+                  <button type="submit" className="button button-primary" disabled={busy}>
+                    {needsLogin ? 'Google 登入' : 'Edit'}
+                  </button>
+                </form>
+              )}
               {canEdit && trip && (
                 <button
                   className="button button-primary"
@@ -265,6 +274,7 @@ export function ManagedPage({
           )}
         </div>
       </header>
+      <TripAccessNotice />
       <section className="intro">
         <div className="eyebrow">{trip?.settings.tripName || 'TRAVEL PLANNER'}</div>
         <h1>{title}</h1>
@@ -274,20 +284,6 @@ export function ManagedPage({
             : '可新增多筆交通，出發與抵達日都會顯示在每日資訊卡。'}
         </p>
       </section>
-      {needsAuthorization && !editing && (
-        <form action="/api/auth/file" method="post">
-          <input type="hidden" name="spreadsheetId" value={spreadsheetId} />
-          <button type="submit" className="button">
-            授權這份旅行
-          </button>
-        </form>
-      )}
-      {needsLogin && !editing && (
-        <form action="/api/auth/signin" method="post">
-          <input type="hidden" name="returnTo" value={`/${spreadsheetId}/${slug}`} />
-          <button className="button">登入 Google 以編輯</button>
-        </form>
-      )}
       {error && (
         <section className="auth-message" role="alert">
           <p>{error}</p>

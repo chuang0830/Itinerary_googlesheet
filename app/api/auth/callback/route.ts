@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authConfig } from '@/lib/auth/config';
-import { AuthError, SESSION_TTL_MS } from '@/lib/auth/core';
+import { continueTripSignIn } from '@/lib/auth/trip-entry-server';
+import { AuthError, AuthReturnError, SESSION_TTL_MS } from '@/lib/auth/core';
 import {
   authService,
   FLOW_COOKIE,
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
       { status: 503, headers: privateHeaders },
     );
   const query = request.nextUrl.searchParams;
+  let completed: { id: string; returnTo: string } | undefined;
   try {
     const result = await authService().complete({
       state: query.get('state') || '',
@@ -26,15 +28,17 @@ export async function GET(request: NextRequest) {
       pickedFileIds: query.get('picked_file_ids') || undefined,
       previousSession: request.cookies.get(SESSION_COOKIE)?.value,
     });
-    const response = NextResponse.redirect(new URL(result.returnTo, config.origin), {
-      status: 303,
-      headers: privateHeaders,
-    });
+    completed = result;
+    const response = await continueTripSignIn(
+      result.id,
+      result.returnTo,
+      config.origin,
+      result.selectionCompleted,
+    );
     response.cookies.set(SESSION_COOKIE, result.id, {
       ...cookieOptions,
       maxAge: SESSION_TTL_MS / 1000,
     });
-    response.cookies.set(FLOW_COOKIE, '', { ...cookieOptions, maxAge: 0 });
     return response;
   } catch (error) {
     const code =
@@ -43,10 +47,20 @@ export async function GET(request: NextRequest) {
         : query.has('error')
           ? 'denied'
           : 'failed';
-    const response = NextResponse.redirect(new URL(`/?authError=${code}`, config.origin), {
-      status: 303,
-      headers: privateHeaders,
-    });
+    const destination = new URL(
+      completed?.returnTo || (error instanceof AuthReturnError ? error.returnTo : '/'),
+      config.origin,
+    );
+    destination.searchParams.set(
+      completed ? 'accessNotice' : 'authError',
+      completed ? 'check_failed' : code,
+    );
+    const response = NextResponse.redirect(destination, { status: 303, headers: privateHeaders });
+    if (completed)
+      response.cookies.set(SESSION_COOKIE, completed.id, {
+        ...cookieOptions,
+        maxAge: SESSION_TTL_MS / 1000,
+      });
     response.cookies.set(FLOW_COOKIE, '', { ...cookieOptions, maxAge: 0 });
     return response;
   }

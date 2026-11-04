@@ -5,7 +5,7 @@ import type { ItineraryGateway } from '@/lib/trip/itinerary-edit';
 export function sheetGateway(
   id: string,
   name: 'Settings' | 'Itinerary' | 'Accommodation' | 'Transportation',
-): ItineraryGateway {
+): ItineraryGateway & { canView(): Promise<boolean> } {
   async function request<T>(url: string, body?: unknown): Promise<T> {
     const token = await currentGoogleAccessToken();
     let response: Response;
@@ -25,7 +25,7 @@ export function sheetGateway(
         throw new ItineraryError('Google 授權已到期，請保留草稿並重新登入。', 401);
       if ([403, 404].includes(response.status))
         throw new ItineraryError(
-          '目前帳號沒有此檔案的存取／編輯權限，或尚未授權此應用程式存取。請保留草稿。',
+          '尚未確認這份試算表的編輯權限。請按 Edit 接續 Google 選檔授權；只有 Sheets 編輯者可以儲存。',
           403,
           'file_access_required',
         );
@@ -35,6 +35,12 @@ export function sheetGateway(
   }
   const base = `https://sheets.googleapis.com/v4/spreadsheets/${id}`;
   return {
+    async canView() {
+      const file = await request<{ mimeType?: string }>(
+        `https://www.googleapis.com/drive/v3/files/${id}?fields=mimeType`,
+      );
+      return file.mimeType === 'application/vnd.google-apps.spreadsheet';
+    },
     async canEdit() {
       const file = await request<{ capabilities?: { canEdit?: boolean }; mimeType?: string }>(
         `https://www.googleapis.com/drive/v3/files/${id}?fields=capabilities(canEdit),mimeType`,

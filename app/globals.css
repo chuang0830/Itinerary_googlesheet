@@ -101,6 +101,7 @@ button {
   margin: 0;
   color: #5d675c;
   font-size: 11px;
+  margin-left: 6px;
 }
 .intro p strong {
   font-weight: 600;

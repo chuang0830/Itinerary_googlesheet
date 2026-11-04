@@ -35,6 +35,14 @@ export class AuthError extends Error {
     super(code);
   }
 }
+export class AuthReturnError extends AuthError {
+  constructor(
+    code: AuthCode,
+    public readonly returnTo: string,
+  ) {
+    super(code);
+  }
+}
 export class GrantRevokedError extends Error {}
 
 // Only relative, same-origin paths may be used after sign-in.
@@ -146,7 +154,7 @@ export class AuthService {
     private google: GoogleProvider,
     private now: () => number = Date.now,
   ) {}
-  async beginFile(sessionId: string, fileId: string) {
+  async beginFile(sessionId: string, fileId: string, returnTo = `/${fileId}`) {
     const session = validId(sessionId) ? await this.store.getSession(sessionId) : null;
     if (!session) throw new AuthError('unauthenticated');
     if (!/^[A-Za-z0-9_-]{20,200}$/.test(fileId) || !this.google.startFile)
@@ -156,7 +164,7 @@ export class AuthService {
     await this.store.saveFlow(id, {
       nonce: randomId(),
       verifier,
-      returnTo: `/${fileId}`,
+      returnTo: safeReturnTo(returnTo),
       expiresAt: this.now() + FLOW_TTL_MS,
       fileId,
       sessionId,
@@ -194,34 +202,42 @@ export class AuthService {
     if (!sameSecret(state, cookie)) throw new AuthError('invalid_flow');
     const flow = await this.store.takeFlow(state);
     if (!flow) throw new AuthError('invalid_flow');
-    if (denied || !code || code.length > 4096) throw new AuthError('login_failed');
+    if (denied || !code || code.length > 4096)
+      throw new AuthReturnError('login_failed', flow.returnTo);
     if (flow.fileId) {
-      if (
-        !flow.sessionId ||
-        previousSession !== flow.sessionId ||
-        pickedFileIds !== flow.fileId ||
-        !this.google.finishFile
-      )
-        throw new AuthError('invalid_flow');
-      const session = await this.store.getSession(flow.sessionId);
-      if (!session) throw new AuthError('unauthenticated');
-      const grant = await this.google.finishFile(code, flow.verifier);
-      if (
-        grant.subject !== session.subject ||
-        !grant.tokens.scopes.includes(DRIVE_FILE_SCOPE) ||
-        grant.tokens.expiresAt <= this.now()
-      )
-        throw new AuthError('invalid_flow');
-      const saved = await this.store.replaceSession(flow.sessionId, session.revision, {
-        ...session,
-        tokens: {
-          ...grant.tokens,
-          refreshToken: grant.tokens.refreshToken || session.tokens.refreshToken,
-        },
-        revision: session.revision + 1,
-      });
-      if (!saved) throw new AuthError('invalid_flow');
-      return { id: flow.sessionId, returnTo: flow.returnTo };
+      try {
+        if (
+          !flow.sessionId ||
+          previousSession !== flow.sessionId ||
+          pickedFileIds !== flow.fileId ||
+          !this.google.finishFile
+        )
+          throw new AuthError('invalid_flow');
+        const session = await this.store.getSession(flow.sessionId);
+        if (!session) throw new AuthError('unauthenticated');
+        const grant = await this.google.finishFile(code, flow.verifier);
+        if (
+          grant.subject !== session.subject ||
+          !grant.tokens.scopes.includes(DRIVE_FILE_SCOPE) ||
+          grant.tokens.expiresAt <= this.now()
+        )
+          throw new AuthError('invalid_flow');
+        const saved = await this.store.replaceSession(flow.sessionId, session.revision, {
+          ...session,
+          tokens: {
+            ...grant.tokens,
+            refreshToken: grant.tokens.refreshToken || session.tokens.refreshToken,
+          },
+          revision: session.revision + 1,
+        });
+        if (!saved) throw new AuthError('invalid_flow');
+        return { id: flow.sessionId, returnTo: flow.returnTo, selectionCompleted: true };
+      } catch (error) {
+        throw new AuthReturnError(
+          error instanceof AuthError ? error.code : 'login_failed',
+          flow.returnTo,
+        );
+      }
     }
     const identity = await this.google.finish(code, flow.verifier, flow.nonce);
     if (!identity.tokens.accessToken || identity.tokens.expiresAt <= this.now())
@@ -233,7 +249,7 @@ export class AuthService {
       expiresAt: this.now() + SESSION_TTL_MS,
     });
     if (previousSession) await this.store.deleteSession(previousSession);
-    return { id, returnTo: flow.returnTo };
+    return { id, returnTo: flow.returnTo, selectionCompleted: false };
   }
   async publicSession(id?: string) {
     const session = id && validId(id) ? await this.store.getSession(id) : null;

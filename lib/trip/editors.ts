@@ -18,7 +18,7 @@ type Permission = {
   deleted?: boolean;
 };
 const editorRoles = new Set(['owner', 'organizer', 'fileOrganizer', 'writer']);
-// Called only after verifying the current user's edit capability. No email or avatar URL is returned.
+// Called only after verifying the current user's file read access. No email or avatar URL is returned.
 export async function readTripEditors(
   id: string,
   authorize: () => Promise<boolean>,
@@ -26,7 +26,8 @@ export async function readTripEditors(
   send: typeof fetch = fetch,
 ): Promise<TripEditor[]> {
   if (!validSpreadsheetId(id)) throw new ItineraryError('旅行網址格式不正確。');
-  if (!(await authorize())) throw new ItineraryError('只有編輯者可以查看協作者名單。', 403);
+  if (!(await authorize()))
+    throw new ItineraryError('請先登入並授權存取這份試算表，才能查看協作者名單。', 403);
   const token = await getToken();
   const editors = new Map<string, TripEditor>();
   const visited = new Set<string>();

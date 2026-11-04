@@ -74,6 +74,7 @@ export function TripMenu({
           </a>
           {signedIn === true && (
             <form action="/api/auth/signout" method="post">
+              <input type="hidden" name="returnTo" value={`/${spreadsheetId}`} />
               <button type="submit" className="menu-action">
                 登出
               </button>

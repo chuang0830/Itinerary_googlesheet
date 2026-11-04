@@ -6,12 +6,31 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
   const [editors, setEditors] = useState<TripEditor[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'private' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   useEffect(() => {
     const controller = new AbortController();
     setState('loading');
     setEditors([]);
-    fetch(`/api/trips/${spreadsheetId}/editors`, { cache: 'no-store', signal: controller.signal })
-      .then(async (response) => {
+    setSignedIn(null);
+    async function load() {
+      try {
+        const sessionResponse = await fetch('/api/auth/session', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!sessionResponse.ok) throw new Error();
+        const { session } = await sessionResponse.json();
+        if (controller.signal.aborted) return;
+        setSignedIn(Boolean(session));
+        if (!session) {
+          setState('private');
+          return;
+        }
+        const response = await fetch(`/api/trips/${spreadsheetId}/editors`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
         if (response.status === 401 || response.status === 403) {
           setState('private');
           return;
@@ -22,10 +41,11 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
           setEditors(data.editors);
           setState('ready');
         }
-      })
-      .catch(() => {
+      } catch {
         if (!controller.signal.aborted) setState('error');
-      });
+      }
+    }
+    void load();
     return () => controller.abort();
   }, [spreadsheetId, attempt]);
   return (
@@ -41,7 +61,9 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
             {editor.kind === 'user' ? editor.name : '👥'}
           </span>
         ))}
-        <span className="companions-label">Shared trip board</span>
+        <span className="companions-label">
+          {signedIn === false ? 'who is sharing trip board ?' : 'Shared trip board'}
+        </span>
         {state === 'loading' && <span role="status">讀取中…</span>}
       </div>
       {state === 'ready' && (
@@ -75,7 +97,11 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
           </button>
         </details>
       )}
-      {state === 'private' && <p className="editors-note">登入且具有編輯權限後可查看成員。</p>}
+      {state === 'private' && (
+        <p className="editors-note">
+          登入並授權存取這份旅行後可查看成員；能否編輯仍依 Google Sheets 權限。
+        </p>
+      )}
       {state === 'error' && (
         <p className="editors-note" role="status">
           暫時無法讀取成員。

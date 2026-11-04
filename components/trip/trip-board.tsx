@@ -1,4 +1,5 @@
 'use client';
+import { TripAccessNotice } from './trip-access-notice';
 import { TripMenu } from './trip-menu';
 import { TripEditors } from './trip-editors';
 import { ShareTrip } from './share-trip';
@@ -120,6 +121,18 @@ export function TripBoard({
           ) : (
             <>
               <ShareTrip spreadsheetId={spreadsheetId} tripName={settings?.tripName} />
+              {(editor.needsLogin || editor.needsAuthorization) && trip && (
+                <form action="/api/auth/signin" method="post">
+                  <input type="hidden" name="returnTo" value={`/${spreadsheetId}`} />
+                  <button
+                    type="submit"
+                    className="button button-primary"
+                    disabled={loading || editor.busy}
+                  >
+                    {editor.needsLogin ? 'Google 登入' : 'Edit'}
+                  </button>
+                </form>
+              )}
               {editor.canEdit && trip && (
                 <button
                   className="button button-primary"
@@ -144,6 +157,7 @@ export function TripBoard({
           )}
         </div>
       </header>
+      <TripAccessNotice />
       {settings && (
         <section className="intro" id="top">
           <div className="eyebrow">
@@ -172,20 +186,6 @@ export function TripBoard({
             重試讀取
           </button>
         </section>
-      )}
-      {editor.needsAuthorization && !editor.editing && (
-        <form action="/api/auth/file" method="post">
-          <input type="hidden" name="spreadsheetId" value={spreadsheetId} />
-          <button type="submit" className="button">
-            授權這份旅行
-          </button>
-        </form>
-      )}
-      {editor.needsLogin && !editor.editing && (
-        <form action="/api/auth/signin" method="post">
-          <input type="hidden" name="returnTo" value={`/${spreadsheetId}`} />
-          <button className="button">登入 Google 以編輯</button>
-        </form>
       )}
       {editor.error && (
         <section className="auth-message" role="alert">

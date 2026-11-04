@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authConfig } from '@/lib/auth/config';
-import { requireSameOrigin } from '@/lib/auth/core';
+import { requireSameOrigin, safeReturnTo } from '@/lib/auth/core';
 import {
   authService,
   SESSION_COOKIE,
@@ -24,8 +24,14 @@ export async function POST(request: NextRequest) {
       { status: 403, headers: privateHeaders },
     );
   }
+  const form = await request.formData();
+  const submittedReturnTo = form.get('returnTo');
+  const returnTo = safeReturnTo(typeof submittedReturnTo === 'string' ? submittedReturnTo : '/');
   await authService().logout(request.cookies.get(SESSION_COOKIE)?.value);
-  const response = NextResponse.redirect(config.origin, { status: 303, headers: privateHeaders });
+  const response = NextResponse.redirect(new URL(returnTo, config.origin), {
+    status: 303,
+    headers: privateHeaders,
+  });
   response.cookies.set(SESSION_COOKIE, '', { ...cookieOptions, maxAge: 0 });
   response.cookies.set(FLOW_COOKIE, '', { ...cookieOptions, maxAge: 0 });
   return response;

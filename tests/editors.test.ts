@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readTripEditors } from '../lib/trip/editors';
 const id = 'a'.repeat(40);
-test('read-only viewers never trigger Google permission or token requests', async () => {
+test('users without verified file read access never trigger Google permission or token requests', async () => {
   let tokens = 0,
     requests = 0;
   await assert.rejects(
@@ -96,4 +96,30 @@ test('permission errors and interrupted pagination never return a partial list',
     ),
     { status: 503 },
   );
+});
+
+test('verified file viewers can read permitted editor names without granting write access', async () => {
+  const editors = await readTripEditors(
+    id,
+    async () => true,
+    async () => 'viewer-token',
+    async (_url, options) => {
+      assert.equal(new Headers(options?.headers).get('Authorization'), 'Bearer viewer-token');
+      assert.equal(options?.method ?? 'GET', 'GET');
+      return Response.json({
+        permissions: [
+          {
+            id: 'owner',
+            type: 'user',
+            role: 'owner',
+            displayName: 'Trip owner',
+            emailAddress: 'owner@example.com',
+          },
+        ],
+      });
+    },
+  );
+  assert.equal(editors[0].displayName, 'Trip owner');
+  assert.equal(editors[0].role, 'owner');
+  assert.ok(!JSON.stringify(editors).includes('canEdit'));
 });

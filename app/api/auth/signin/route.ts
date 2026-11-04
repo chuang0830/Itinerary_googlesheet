@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authConfig } from '@/lib/auth/config';
-import { requireSameOrigin, FLOW_TTL_MS } from '@/lib/auth/core';
-import { authService, FLOW_COOKIE, cookieOptions, privateHeaders } from '@/lib/auth/server';
+import { continueTripSignIn } from '@/lib/auth/trip-entry-server';
+import { tripSignInTarget } from '@/lib/auth/trip-entry';
+import { AuthError, requireSameOrigin, FLOW_TTL_MS } from '@/lib/auth/core';
+import {
+  authService,
+  FLOW_COOKIE,
+  SESSION_COOKIE,
+  cookieOptions,
+  privateHeaders,
+} from '@/lib/auth/server';
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   const config = authConfig();
@@ -21,6 +29,26 @@ export async function POST(request: NextRequest) {
   try {
     const form = await request.formData();
     const returnTo = form.get('returnTo');
+    const sessionId = request.cookies.get(SESSION_COOKIE)?.value;
+    if (
+      typeof returnTo === 'string' &&
+      tripSignInTarget(returnTo) &&
+      sessionId &&
+      (await authService().subject(sessionId))
+    ) {
+      try {
+        return await continueTripSignIn(sessionId, returnTo, config.origin);
+      } catch (error) {
+        if (
+          !(error instanceof AuthError) ||
+          !['unauthenticated', 'reauth_required'].includes(error.code)
+        ) {
+          const destination = new URL(returnTo, config.origin);
+          destination.searchParams.set('accessNotice', 'check_failed');
+          return NextResponse.redirect(destination, { status: 303, headers: privateHeaders });
+        }
+      }
+    }
     const flow = await authService().begin(
       typeof returnTo === 'string' ? returnTo : '/',
       request.cookies.get(FLOW_COOKIE)?.value,

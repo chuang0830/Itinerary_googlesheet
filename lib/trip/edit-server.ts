@@ -30,7 +30,7 @@ export function editFailure(error: unknown) {
     code = error.code;
     message =
       error.code === 'google_grant_required'
-        ? '你已登入，但尚未授權網站存取 Google 試算表。請按下方按鈕，在 Google 授權畫面允許所要求的檔案存取。'
+        ? '你已登入，但尚未授權網站存取 Google 試算表。請按 Edit，接續 Google 選檔授權。'
         : '登入服務設定尚未完成，請稍後重試。';
   } else if (error instanceof AuthError) {
     code = error.code;

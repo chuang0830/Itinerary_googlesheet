@@ -14,7 +14,7 @@ export async function GET(
     await editableTrip(request, spreadsheetId);
     const editors = await readTripEditors(
       spreadsheetId,
-      () => itineraryGateway(spreadsheetId).canEdit(),
+      () => itineraryGateway(spreadsheetId).canView(),
       currentGoogleAccessToken,
     );
     return NextResponse.json({ editors }, { headers: editHeaders });

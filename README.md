@@ -81,6 +81,6 @@ Phase 5 實際瀏覽器驗證：原帳號可進入 Edit；新增、輸入、鍵�
 
 Prettier 統一處理整個專案的 TypeScript、TSX、CSS、JSON、Markdown；排除憑證、套件與產生檔案。這是原始碼格式規則，保留原有網站視覺與 Done / Cancel 操作。
 
-Shared trip board 改讀 Drive 原生權限，呈現擁有者與編輯者帳號 Email 的第一個字母，以及可展開的名單。只有已登入且 Google 確認有編輯權限的帳號能取得名單；匿名與唯讀使用者不會取得成員資訊。沒有另建權限資料庫，也不會更改共用權限或增加 OAuth scope。群組／網域只能列授權對象，無法推導完整個人名單。頭像顯示帳號首字，展開名單顯示名字與角色；後端不回傳完整 Email。若無法取得 Email，頭像顯示「?」。
+Shared trip board 改讀 Drive 原生權限，呈現擁有者與編輯者帳號 Email 的第一個字母，以及可展開的名單。已登入且 Google 確認可存取該檔案的帳號可查看 Google 允許提供的成員資訊，包含唯讀使用者；匿名訪客不取得名單。查看名單不授予寫入權限。沒有另建權限資料庫，也不會更改共用權限或增加 OAuth scope。群組／網域只能列授權對象，無法推導完整個人名單。頭像顯示帳號首字，展開名單顯示名字與角色；後端不回傳完整 Email。若無法取得 Email，頭像顯示「?」。
 
 Vercel 後續部署將依 yarn.lock 使用 Yarn；若專案後台有手動覆寫 npm 安裝指令，需改為 `yarn install --frozen-lockfile`，建置指令為 `yarn build`。此版本已完成 Yarn、Prettier 與編輯者名單更新；部署前執行格式檢查、自動測試及正式建置。
