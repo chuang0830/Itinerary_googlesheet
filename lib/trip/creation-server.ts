@@ -13,9 +13,9 @@ export async function creationOwner(request: NextRequest, write = false) {
   if (!config) throw new CreationError('local_only', 503);
   if (write) requireSameOrigin(request, config.origin);
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
-  const owner = authService().subject(id);
+  const owner = await authService().subject(id);
   if (!owner) throw new AuthError('unauthenticated');
-  if (!authService().publicSession(id)?.googleAuthorized) throw new CreationError('google_grant_required', 403);
+  if (!(await authService().publicSession(id))?.googleAuthorized) throw new CreationError('google_grant_required', 403);
   return owner;
 }
 export async function readCreationInput(request: NextRequest, maxBytes = 8192) {

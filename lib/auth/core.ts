@@ -36,14 +36,15 @@ export function requireSameOrigin(request: Request, origin: string): void {
   }
 }
 
+type MaybePromise<T> = T | Promise<T>;
 export interface AuthStore {
-  saveFlow(id: string, flow: LoginFlow): void;
-  takeFlow(id: string): LoginFlow | null;
-  deleteFlow(id: string): void;
-  saveSession(id: string, session: Session): void;
-  getSession(id: string): Session | null;
-  replaceSession(id: string, expectedRevision: number, session: Session): boolean;
-  deleteSession(id: string): void;
+  saveFlow(id: string, flow: LoginFlow): MaybePromise<void>;
+  takeFlow(id: string): MaybePromise<LoginFlow | null>;
+  deleteFlow(id: string): MaybePromise<void>;
+  saveSession(id: string, session: Session): MaybePromise<void>;
+  getSession(id: string): MaybePromise<Session | null>;
+  replaceSession(id: string, expectedRevision: number, session: Session): MaybePromise<boolean>;
+  deleteSession(id: string): MaybePromise<void>;
 }
 
 // Development only. One shared process-local store, with bounded, expiring entries.
@@ -88,56 +89,56 @@ export interface GoogleProvider {
 export class AuthService {
   constructor(private store: AuthStore, private google: GoogleProvider, private now: () => number = Date.now) {}
   async begin(returnTo?: string | null, previousFlow?: string) {
-    if (previousFlow) this.store.deleteFlow(previousFlow);
+    if (previousFlow) await this.store.deleteFlow(previousFlow);
     const id = randomId(); const nonce = randomId();
     const { url, verifier } = await this.google.start(id, nonce);
-    this.store.saveFlow(id, { nonce, verifier, returnTo: safeReturnTo(returnTo), expiresAt: this.now() + FLOW_TTL_MS });
+    await this.store.saveFlow(id, { nonce, verifier, returnTo: safeReturnTo(returnTo), expiresAt: this.now() + FLOW_TTL_MS });
     return { id, url };
   }
   async complete({ state, cookie, code, denied, previousSession }: {
     state: string; cookie: string; code: string; denied: boolean; previousSession?: string;
   }) {
     if (!sameSecret(state, cookie)) throw new AuthError('invalid_flow');
-    const flow = this.store.takeFlow(state);
+    const flow = await this.store.takeFlow(state);
     if (!flow) throw new AuthError('invalid_flow');
     if (denied || !code || code.length > 4096) throw new AuthError('login_failed');
     const identity = await this.google.finish(code, flow.verifier, flow.nonce);
     if (!identity.tokens.accessToken || identity.tokens.expiresAt <= this.now()) throw new AuthError('login_failed');
     const id = randomId();
-    this.store.saveSession(id, { ...identity, revision: 0, expiresAt: this.now() + SESSION_TTL_MS });
-    if (previousSession) this.store.deleteSession(previousSession);
+    await this.store.saveSession(id, { ...identity, revision: 0, expiresAt: this.now() + SESSION_TTL_MS });
+    if (previousSession) await this.store.deleteSession(previousSession);
     return { id, returnTo: flow.returnTo };
   }
-  publicSession(id?: string) {
-    const session = id && validId(id) ? this.store.getSession(id) : null;
+  async publicSession(id?: string) {
+    const session = id && validId(id) ? await this.store.getSession(id) : null;
     if (!session) return null;
     return { user: session.user, googleAuthorized: session.tokens.scopes.includes(DRIVE_FILE_SCOPE) };
   }
-  subject(id?: string) { return id && validId(id) ? this.store.getSession(id)?.subject || null : null; }
-  logout(id?: string) { if (id && validId(id)) this.store.deleteSession(id); }
+  async subject(id?: string) { return id && validId(id) ? (await this.store.getSession(id))?.subject || null : null; }
+  async logout(id?: string) { if (id && validId(id)) await this.store.deleteSession(id); }
   // Call only from server-side Google API helpers; never serialize this return value.
   async accessToken(id?: string): Promise<string> {
     if (!id || !validId(id)) throw new AuthError('unauthenticated');
-    const session = this.store.getSession(id);
+    const session = await this.store.getSession(id);
     if (!session) throw new AuthError('unauthenticated');
     if (session.tokens.expiresAt > this.now() + 60_000) return session.tokens.accessToken;
     if (!session.tokens.refreshToken) {
-      this.store.deleteSession(id); throw new AuthError('reauth_required');
+      await this.store.deleteSession(id); throw new AuthError('reauth_required');
     }
     let tokens: GoogleTokens;
     try { tokens = await this.google.refresh(session.tokens); }
     catch (error) {
       if (error instanceof GrantRevokedError) {
-        this.store.deleteSession(id); throw new AuthError('reauth_required');
+        await this.store.deleteSession(id); throw new AuthError('reauth_required');
       }
       throw new AuthError('temporarily_unavailable');
     }
     if (!tokens.accessToken || tokens.expiresAt <= this.now()) throw new AuthError('temporarily_unavailable');
-    const saved = this.store.replaceSession(id, session.revision, {
+    const saved = await this.store.replaceSession(id, session.revision, {
       ...session, tokens: { ...tokens, refreshToken: tokens.refreshToken || session.tokens.refreshToken }, revision: session.revision + 1,
     });
     // A concurrent refresh must not restore a session removed by logout.
-    const current = this.store.getSession(id);
+    const current = await this.store.getSession(id);
     if (!current) throw new AuthError('unauthenticated');
     if (!saved && current.tokens.expiresAt <= this.now() + 60_000) throw new AuthError('temporarily_unavailable');
     return current.tokens.accessToken;

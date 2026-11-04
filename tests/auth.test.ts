@@ -50,22 +50,22 @@ test('failed code exchange consumes its flow, preventing replay', async () => {
   await assert.rejects(f.service.complete({ state: flow.id, cookie: flow.id, code: 'valid-code', denied: false }), hasCode('invalid_flow'));
 });
 test('public session is an allowlist and cannot disclose or mutate stored tokens', async () => {
-  const f = fixture(); const result = await f.login(); const session = f.service.publicSession(result.id)!;
+  const f = fixture(); const result = await f.login(); const session = (await f.service.publicSession(result.id))!;
   assert.deepEqual(session, { user: { name: 'Tester', email: 'test@example.com' }, googleAuthorized: true });
   const json = JSON.stringify(session); assert.ok(!json.includes('private-')); assert.ok(!json.includes('subject'));
-  session.user.name = 'Changed'; assert.equal(f.service.publicSession(result.id)?.user.name, 'Tester');
+  session.user.name = 'Changed'; assert.equal((await f.service.publicSession(result.id))?.user.name, 'Tester');
   assert.equal(result.returnTo, '/trip?day=1');
 });
 test('new sign-in rotates the session and invalidates the old identifier', async () => {
   const f = fixture(); const first = await f.login(); const second = await f.login(first.id);
-  assert.notEqual(first.id, second.id); assert.equal(f.service.publicSession(first.id), null);
-  assert.ok(f.service.publicSession(second.id));
+  assert.notEqual(first.id, second.id); assert.equal((await f.service.publicSession(first.id)), null);
+  assert.ok((await f.service.publicSession(second.id)));
 });
 test('logout and absolute expiry invalidate server sessions', async () => {
-  const f = fixture(); const first = await f.login(); f.service.logout(first.id);
+  const f = fixture(); const first = await f.login(); await f.service.logout(first.id);
   await assert.rejects(f.service.accessToken(first.id), hasCode('unauthenticated'));
   const second = await f.login(); f.advance(SESSION_TTL_MS);
-  assert.equal(f.service.publicSession(second.id), null);
+  assert.equal((await f.service.publicSession(second.id)), null);
 });
 test('access tokens refresh on the server without extending session expiry', async () => {
   const f = fixture(); const session = await f.login(); const expiry = f.store.getSession(session.id)!.expiresAt;
@@ -77,16 +77,16 @@ test('revoked refresh grant invalidates the session; temporary failures preserve
   const f = fixture(); const session = await f.login(); f.advance(3_550_000);
   f.provider.refresh = async () => { throw new Error('network'); };
   await assert.rejects(f.service.accessToken(session.id), hasCode('temporarily_unavailable'));
-  assert.ok(f.service.publicSession(session.id));
+  assert.ok((await f.service.publicSession(session.id)));
   f.provider.refresh = async () => { throw new GrantRevokedError(); };
   await assert.rejects(f.service.accessToken(session.id), hasCode('reauth_required'));
-  assert.equal(f.service.publicSession(session.id), null);
+  assert.equal((await f.service.publicSession(session.id)), null);
 });
 test('an expiring grant without a refresh token requires reauthentication', async () => {
   const f = fixture(); delete f.identity.tokens.refreshToken;
   const session = await f.login(); f.advance(3_550_000);
   await assert.rejects(f.service.accessToken(session.id), hasCode('reauth_required'));
-  assert.equal(f.service.publicSession(session.id), null);
+  assert.equal((await f.service.publicSession(session.id)), null);
 });
 test('a token refresh completing after logout cannot recreate the session', async () => {
   const f = fixture(); const session = await f.login(); f.advance(3_550_000);
@@ -95,9 +95,9 @@ test('a token refresh completing after logout cannot recreate the session', asyn
     await new Promise<void>(resolve => { finish = resolve; });
     return { ...f.identity.tokens, accessToken: 'updated-access', expiresAt: 9_000_000 };
   };
-  const pending = f.service.accessToken(session.id); f.service.logout(session.id); finish();
+  const pending = f.service.accessToken(session.id); await Promise.resolve(); await f.service.logout(session.id); finish();
   await assert.rejects(pending, hasCode('unauthenticated'));
-  assert.equal(f.service.publicSession(session.id), null);
+  assert.equal((await f.service.publicSession(session.id)), null);
 });
 test('cross-site POSTs and missing origins are rejected', () => {
   const origin = 'http://localhost:3000';
