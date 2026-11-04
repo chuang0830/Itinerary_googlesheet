@@ -80,7 +80,7 @@ export function TripMenu({
               </button>
             </form>
           )}
-          {signedIn === false && <a href="/">Google 登入</a>}
+          {signedIn === false && <a href="/">建立新旅行</a>}
         </nav>
       )}
     </div>

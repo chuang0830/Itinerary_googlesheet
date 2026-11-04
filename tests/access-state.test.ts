@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { READ_ONLY_NOTICE, tripAccessState } from '../lib/trip/access-state';
-test('signed-in users without confirmed edit access stay read-only without a repeated login prompt', () => {
+test('missing file authorization is not misreported as confirmed read-only', () => {
   const state = tripAccessState(403, { code: 'google_grant_required', error: 'Grant required' });
-  assert.equal(state.needsAuthorization, false);
+  assert.equal(state.needsAuthorization, true);
   assert.equal(state.needsLogin, false);
   assert.equal(state.canEdit, false);
-  assert.equal(state.error, READ_ONLY_NOTICE);
+  assert.notEqual(state.error, READ_ONLY_NOTICE);
 });
 test('file permissions and outages never request repeated sign-in', () => {
   for (const status of [403, 503]) {

@@ -44,7 +44,11 @@ export function editFailure(error: unknown) {
           ? '登入狀態已失效，請重新登入，未儲存的草稿仍會保留。'
           : '請從本站提交。';
   }
-  if (status === 403 && code !== 'invalid_flow') message = READ_ONLY_NOTICE;
+  if (
+    status === 403 &&
+    !['invalid_flow', 'google_grant_required', 'file_access_required'].includes(code || '')
+  )
+    message = READ_ONLY_NOTICE;
   return NextResponse.json(
     { error: message, ...(code ? { code } : {}) },
     { status, headers: editHeaders },

@@ -49,10 +49,10 @@ export async function tripEntryDecision(
   const path = new URL(target.path, 'https://local.invalid');
   path.searchParams.delete('accessNotice');
   path.searchParams.delete('authError');
-  const destination = `${path.pathname}${path.search}${path.hash}`;
-  // Only confirmed editors continue to the file picker. Unknown access never grants entry.
-  if (access === 'editor' && !selectionCompleted)
-    return { path: destination, selectFile: true, id: target.id };
+  if (access === 'needs_file' && !selectionCompleted)
+    return { path: `${path.pathname}${path.search}${path.hash}`, selectFile: true };
+  // canEdit=true already proves this token can access and edit the file.
+  // Repeating file authorization here can reject an otherwise valid editor.
   if (access !== 'editor')
     path.searchParams.set(
       'accessNotice',

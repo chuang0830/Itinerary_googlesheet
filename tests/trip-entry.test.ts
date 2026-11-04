@@ -9,7 +9,7 @@ test('only known trip paths qualify, not external URLs, auth routes or homepage'
   assert.equal(tripSignInTarget(`/${id}/unknown`), null);
   assert.deepEqual(tripSignInTarget(`/${id}/settings`), { id, path: `/${id}/settings` });
 });
-test('only confirmed editors continue to file selection after the backend check', async () => {
+test('confirmed editors return directly without repeating file authorization', async () => {
   const order: string[] = [];
   const decision = await tripEntryDecision(`/${id}`, false, async (file) => {
     order.push('checked');
@@ -17,11 +17,11 @@ test('only confirmed editors continue to file selection after the backend check'
     return 'editor';
   });
   assert.deepEqual(order, ['checked']);
-  assert.equal(decision.selectFile, true);
-  assert.equal(decision.id, id);
+  assert.equal(decision.selectFile, false);
+  assert.equal(decision.path, `/${id}`);
   const unknown = await tripEntryDecision(`/${id}`, false, async () => 'needs_file');
-  assert.equal(unknown.selectFile, false);
-  assert.equal(unknown.path, `/${id}?accessNotice=permission_unknown`);
+  assert.equal(unknown.selectFile, true);
+  assert.equal(unknown.path, `/${id}`);
 });
 test('known readers stay read-only and completed selections never loop into picker', async () => {
   const reader = await tripEntryDecision(`/${id}/settings`, false, async () => 'reader');
@@ -77,4 +77,15 @@ test('after file selection confirmed editors return once and stale notices are r
   );
   assert.equal(result.selectFile, false);
   assert.equal(result.path, `/${id}/settings?view=trip`);
+});
+
+test('already authorized editors clear failed authorization notices on a fresh sign-in', async () => {
+  for (const completed of [false, true]) {
+    const result = await tripEntryDecision(
+      `/${id}?authError=failed&accessNotice=readonly&view=trip`,
+      completed,
+      async () => 'editor',
+    );
+    assert.deepEqual(result, { path: `/${id}?view=trip`, selectFile: false });
+  }
 });

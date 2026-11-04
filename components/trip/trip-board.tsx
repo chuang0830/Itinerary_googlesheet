@@ -131,7 +131,7 @@ export function TripBoard({
                     className="button button-primary"
                     disabled={loading || editor.busy}
                   >
-                    {editor.needsLogin ? 'Google 登入' : 'Edit'}
+                    {editor.needsLogin ? 'Google 登入' : '完成登入'}
                   </button>
                 </form>
               )}
@@ -165,7 +165,7 @@ export function TripBoard({
           {READ_ONLY_NOTICE}
         </aside>
       )}
-      <TripAccessNotice />
+      <TripAccessNotice canEdit={editor.canEdit} />
       {settings && (
         <section className="intro" id="top">
           <div className="eyebrow">

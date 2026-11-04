@@ -180,7 +180,7 @@ export function SettingsPage({
                 <form action="/api/auth/signin" method="post">
                   <input type="hidden" name="returnTo" value={`/${spreadsheetId}/settings`} />
                   <button type="submit" className="button button-primary" disabled={busy}>
-                    {needsLogin ? 'Google 登入' : 'Edit'}
+                    {needsLogin ? 'Google 登入' : '完成登入'}
                   </button>
                 </form>
               )}
@@ -214,7 +214,7 @@ export function SettingsPage({
           {READ_ONLY_NOTICE}
         </aside>
       )}
-      <TripAccessNotice />
+      <TripAccessNotice canEdit={canEdit} />
       <section className="intro">
         <div className="eyebrow">{settings?.tripName || 'TRAVEL PLANNER'}</div>
         <h1>Settings · 網站設定</h1>

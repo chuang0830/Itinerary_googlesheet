@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-export function TripAccessNotice() {
+export function TripAccessNotice({ canEdit = false }: { canEdit?: boolean }) {
   const [message, setMessage] = useState('');
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -15,7 +15,7 @@ export function TripAccessNotice() {
         'Google 授權未完成，請確認使用相同帳號並選取這份旅行。目前維持唯讀，可再按 Edit 重試。',
       );
   }, []);
-  return message ? (
+  return message && !canEdit ? (
     <aside className="auth-message" role="status">
       {message}
     </aside>
