@@ -173,6 +173,14 @@ export function TripBoard({
           </button>
         </section>
       )}
+      {editor.needsAuthorization && !editor.editing && (
+        <form action="/api/auth/file" method="post">
+          <input type="hidden" name="spreadsheetId" value={spreadsheetId} />
+          <button type="submit" className="button">
+            授權這份旅行
+          </button>
+        </form>
+      )}
       {editor.needsLogin && !editor.editing && (
         <form action="/api/auth/signin" method="post">
           <input type="hidden" name="returnTo" value={`/${spreadsheetId}`} />

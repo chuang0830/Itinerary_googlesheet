@@ -27,6 +27,7 @@ export function sheetGateway(
         throw new ItineraryError(
           '目前帳號沒有此檔案的存取／編輯權限，或尚未授權此應用程式存取。請保留草稿。',
           403,
+          'file_access_required',
         );
       throw new ItineraryError('Google Sheets 暫時無法儲存，請保留草稿後重試。', 503);
     }

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       cookie: request.cookies.get(FLOW_COOKIE)?.value || '',
       code: query.get('code') || '',
       denied: query.has('error'),
+      pickedFileIds: query.get('picked_file_ids') || undefined,
       previousSession: request.cookies.get(SESSION_COOKIE)?.value,
     });
     const response = NextResponse.redirect(new URL(result.returnTo, config.origin), {

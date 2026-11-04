@@ -1,4 +1,5 @@
 'use client';
+import { tripAccessState } from '@/lib/trip/access-state';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { TripMenu } from './trip-menu';
 import { THEMES } from '@/lib/trip/create-schema';
@@ -19,6 +20,7 @@ export function SettingsPage({
   const [blocked, setBlocked] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [needsAuthorization, setNeedsAuthorization] = useState(false);
   const [error, setError] = useState(initialError);
   const [status, setStatus] = useState(initialSettings ? '已讀取 Google Sheets' : '');
   const version = useRef('');
@@ -29,8 +31,11 @@ export function SettingsPage({
       .then(async (response) => {
         const data = await response.json();
         if (!controller.signal.aborted) {
-          setCanEdit(response.ok && data.canEdit === true);
-          setNeedsLogin(response.status === 401);
+          const access = tripAccessState(response.status, data);
+          setCanEdit(access.canEdit);
+          setNeedsLogin(access.needsLogin);
+          setNeedsAuthorization(access.needsAuthorization);
+          if (access.error) setError(access.error);
         }
       })
       .catch(() => {});
@@ -197,6 +202,14 @@ export function SettingsPage({
         <h1>Settings · 網站設定</h1>
         <p>調整旅行資訊與主題色，按 Done 後套用。</p>
       </section>
+      {needsAuthorization && !editing && (
+        <form action="/api/auth/file" method="post">
+          <input type="hidden" name="spreadsheetId" value={spreadsheetId} />
+          <button type="submit" className="button">
+            授權這份旅行
+          </button>
+        </form>
+      )}
       {needsLogin && !editing && (
         <form action="/api/auth/signin" method="post">
           <input type="hidden" name="returnTo" value={`/${spreadsheetId}/settings`} />

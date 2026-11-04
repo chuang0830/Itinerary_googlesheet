@@ -1,4 +1,5 @@
 'use client';
+import { tripAccessState } from '@/lib/trip/access-state';
 import { useEffect, useRef, useState } from 'react';
 import type { ItineraryRow } from '@/lib/trip/types';
 import type { TripData } from '@/lib/trip/read';
@@ -6,6 +7,7 @@ import type { DraftPlan } from './edit-plan-list';
 export function useItineraryEditor(id: string, onSnapshot: (trip: TripData) => void) {
   const [canEdit, setCanEdit] = useState(false);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [needsAuthorization, setNeedsAuthorization] = useState(false);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [blocked, setBlocked] = useState(false);
@@ -22,8 +24,11 @@ export function useItineraryEditor(id: string, onSnapshot: (trip: TripData) => v
       .then(async (response) => {
         const data = await response.json();
         if (!controller.signal.aborted) {
-          setCanEdit(response.ok && data.canEdit === true);
-          setNeedsLogin(response.status === 401);
+          const access = tripAccessState(response.status, data);
+          setCanEdit(access.canEdit);
+          setNeedsLogin(access.needsLogin);
+          setNeedsAuthorization(access.needsAuthorization);
+          if (access.error) setError(access.error);
         }
       })
       .catch(() => {});
@@ -143,6 +148,7 @@ export function useItineraryEditor(id: string, onSnapshot: (trip: TripData) => v
   return {
     canEdit,
     needsLogin,
+    needsAuthorization,
     editing,
     busy,
     blocked,

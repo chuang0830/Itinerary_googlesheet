@@ -1,5 +1,6 @@
 import type { PublicUser } from '@/lib/auth/core';
 const messages: Record<string, string> = {
+  file: '檔案授權未完成。請確認使用原本登入的帳號、選取這份旅行，並啟用 Google Picker API。',
   denied: '你已取消 Google 授權，可以隨時重新登入。',
   expired: '登入請求已過期或不符，請重新登入。',
   failed: 'Google 登入未完成，請重新嘗試。',

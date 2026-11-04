@@ -15,7 +15,14 @@ export type GoogleTokens = {
   scopes: string[];
 };
 export type Identity = { subject: string; user: PublicUser; tokens: GoogleTokens };
-export type LoginFlow = { nonce: string; verifier: string; returnTo: string; expiresAt: number };
+export type LoginFlow = {
+  nonce: string;
+  verifier: string;
+  returnTo: string;
+  expiresAt: number;
+  fileId?: string;
+  sessionId?: string;
+};
 export type Session = Identity & { expiresAt: number; revision: number };
 export type AuthCode =
   | 'invalid_flow'
@@ -122,6 +129,12 @@ export class MemoryAuthStore implements AuthStore {
 }
 
 export interface GoogleProvider {
+  startFile?(
+    state: string,
+    subject: string,
+    fileId: string,
+  ): Promise<{ url: string; verifier: string }>;
+  finishFile?(code: string, verifier: string): Promise<{ subject: string; tokens: GoogleTokens }>;
   start(state: string, nonce: string): Promise<{ url: string; verifier: string }>;
   finish(code: string, verifier: string, nonce: string): Promise<Identity>;
   refresh(tokens: GoogleTokens): Promise<GoogleTokens>;
@@ -133,6 +146,23 @@ export class AuthService {
     private google: GoogleProvider,
     private now: () => number = Date.now,
   ) {}
+  async beginFile(sessionId: string, fileId: string) {
+    const session = validId(sessionId) ? await this.store.getSession(sessionId) : null;
+    if (!session) throw new AuthError('unauthenticated');
+    if (!/^[A-Za-z0-9_-]{20,200}$/.test(fileId) || !this.google.startFile)
+      throw new AuthError('invalid_flow');
+    const id = randomId();
+    const { url, verifier } = await this.google.startFile(id, session.subject, fileId);
+    await this.store.saveFlow(id, {
+      nonce: randomId(),
+      verifier,
+      returnTo: `/${fileId}`,
+      expiresAt: this.now() + FLOW_TTL_MS,
+      fileId,
+      sessionId,
+    });
+    return { id, url };
+  }
   async begin(returnTo?: string | null, previousFlow?: string) {
     if (previousFlow) await this.store.deleteFlow(previousFlow);
     const id = randomId();
@@ -152,17 +182,47 @@ export class AuthService {
     code,
     denied,
     previousSession,
+    pickedFileIds,
   }: {
     state: string;
     cookie: string;
     code: string;
     denied: boolean;
     previousSession?: string;
+    pickedFileIds?: string;
   }) {
     if (!sameSecret(state, cookie)) throw new AuthError('invalid_flow');
     const flow = await this.store.takeFlow(state);
     if (!flow) throw new AuthError('invalid_flow');
     if (denied || !code || code.length > 4096) throw new AuthError('login_failed');
+    if (flow.fileId) {
+      if (
+        !flow.sessionId ||
+        previousSession !== flow.sessionId ||
+        pickedFileIds !== flow.fileId ||
+        !this.google.finishFile
+      )
+        throw new AuthError('invalid_flow');
+      const session = await this.store.getSession(flow.sessionId);
+      if (!session) throw new AuthError('unauthenticated');
+      const grant = await this.google.finishFile(code, flow.verifier);
+      if (
+        grant.subject !== session.subject ||
+        !grant.tokens.scopes.includes(DRIVE_FILE_SCOPE) ||
+        grant.tokens.expiresAt <= this.now()
+      )
+        throw new AuthError('invalid_flow');
+      const saved = await this.store.replaceSession(flow.sessionId, session.revision, {
+        ...session,
+        tokens: {
+          ...grant.tokens,
+          refreshToken: grant.tokens.refreshToken || session.tokens.refreshToken,
+        },
+        revision: session.revision + 1,
+      });
+      if (!saved) throw new AuthError('invalid_flow');
+      return { id: flow.sessionId, returnTo: flow.returnTo };
+    }
     const identity = await this.google.finish(code, flow.verifier, flow.nonce);
     if (!identity.tokens.accessToken || identity.tokens.expiresAt <= this.now())
       throw new AuthError('login_failed');
