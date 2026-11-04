@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+.vercel/
+.env*
+yarn.lock
+next-env.d.ts
+*.tsbuildinfo
+.git/

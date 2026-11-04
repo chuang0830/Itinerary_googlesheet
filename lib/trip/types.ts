@@ -8,11 +8,22 @@ export type TripSettings = {
 };
 export type ItineraryRow = { Date: string; Activity: string; MapURL: string };
 export type AccommodationRow = {
-  Name: string; City: string; CheckIn: string; CheckOut: string; MapURL: string;
+  Name: string;
+  City: string;
+  CheckIn: string;
+  CheckOut: string;
+  MapURL: string;
 };
 export type TransportationRow = {
   Type: 'Flight' | 'Train' | 'Bus' | 'Other';
-  From: string; To: string; DepartureDate: string; DepartureTime: string;
-  ArrivalDate: string; ArrivalTime: string; Carrier: string; Number: string; BookingURL: string;
+  From: string;
+  To: string;
+  DepartureDate: string;
+  DepartureTime: string;
+  ArrivalDate: string;
+  ArrivalTime: string;
+  Carrier: string;
+  Number: string;
+  BookingURL: string;
 };
 export type SyncState = 'disconnected' | 'saving' | 'synced' | 'error';

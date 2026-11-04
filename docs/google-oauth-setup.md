@@ -2,7 +2,7 @@
 
 ## 此階段的邊界
 
-依使用者選擇，暫不加入 Redis / KV 或資料庫。只在 `npm run dev` 的本機環境啟用登入；正式環境及 Vercel 會停用記憶體 Session，不能當成正式版登入部署。
+依使用者選擇，暫不加入 Redis / KV 或資料庫。只在 `yarn dev` 的本機環境啟用登入；正式環境及 Vercel 會停用記憶體 Session，不能當成正式版登入部署。
 
 Google Token 只保存在 Node.js 程序記憶體，不進入瀏覽器 cookie、HTML、localStorage 或 Session API。瀏覽器只持有隨機的 Session ID；cookie 為 HttpOnly、SameSite=Lax、Path=/，本機 HTTP 不使用 Secure。未來正式 HTTPS 版必須使用 Secure cookie 及共用 Session 儲存。
 
@@ -14,8 +14,8 @@ Session 最長 24 小時、登入請求 10 分鐘；到期資料會在 store 操
 2. 在 Google Auth Platform 設定 Branding / Audience / Data Access。測試狀態下，將要登入的 Google 帳號加入 Test users。
 3. 建立 OAuth client，類型選 **Web application**。
 4. 加入 Authorized redirect URI：`http://localhost:3000/api/auth/callback`。路徑、port 與 `.env.local` 的 AUTH_URL 必須完全相同。
-5. 將 `.env.example` 複製為 `.env.local`，只在該檔案填入自己的 Google Client ID 與 Client Secret。不要把 Secret 貼到聊天或加上 NEXT_PUBLIC_ 前綴；此檔案已被 gitignore 排除。
-6. 執行 `npm run dev`，開啟 `http://localhost:3000`，點 Google 登入。更動環境變數後須重啟。
+5. 將 `.env.example` 複製為 `.env.local`，只在該檔案填入自己的 Google Client ID 與 Client Secret。不要把 Secret 貼到聊天或加上 NEXT*PUBLIC* 前綴；此檔案已被 gitignore 排除。
+6. 執行 `yarn dev`，開啟 `http://localhost:3000`，點 Google 登入。更動環境變數後須重啟。
 
 不需要將 Client Secret 提供給任何公開網站或放進原 Thailand_Itinerary 專案。若要改成 `127.0.0.1` 或不同 port，須同步調整 AUTH_URL、啟動參數及 Google 的 redirect URI。
 

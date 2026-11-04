@@ -4,8 +4,8 @@
 
 ## 匯入與設定
 
-1. 在 Vercel 個人 Hobby 帳號匯入 GitHub 的 Itinerary_googlesheet。Framework 選 Next.js、Root Directory 維持專案根目錄、Build Command 使用 npm run build。不要開啟付費試用或增加付款方式。
-2. 設定 Production 環境變數（不要放在 NEXT_PUBLIC_）：
+1. 在 Vercel 個人 Hobby 帳號匯入 GitHub 的 Itinerary_googlesheet。Framework 選 Next.js、Root Directory 維持專案根目錄、Build Command 使用 yarn build。不要開啟付費試用或增加付款方式。
+2. 設定 Production 環境變數（不要放在 NEXT*PUBLIC*）：
    - AUTH_URL：正式固定 HTTPS 網址，不能填 localhost 或帶子路徑。
    - GOOGLE_CLIENT_ID、GOOGLE_CLIENT_SECRET：Google OAuth 網頁應用程式憑證。
    - GOOGLE_SHEETS_API_KEY：只開放 Sheets API 的伺服器讀取 Key。

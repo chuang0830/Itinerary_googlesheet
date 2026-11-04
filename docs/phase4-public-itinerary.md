@@ -7,7 +7,7 @@
 1. 同一個 Google Cloud 專案 → API 和服務 → 憑證 → 建立憑證 → API 金鑰。
 2. API 限制設為僅允許 Google Sheets API。
 3. 使用標準 API Key，不綁定服務帳戶或額外 IAM 身分。
-4. 在 `.env.local` 填入 `GOOGLE_SHEETS_API_KEY=...`。不使用 NEXT_PUBLIC_，不要貼到聊天或提交 Git。
+4. 在 `.env.local` 填入 `GOOGLE_SHEETS_API_KEY=...`。不使用 NEXT*PUBLIC*，不要貼到聊天或提交 Git。
 5. 開發伺服器會重新載入環境變數；若未生效再重啟。重啟會清除本機登入 Session，但公開旅行檢視本身不需要登入。
 
 API Key 只由伺服器以 X-Goog-Api-Key header 傳至 Google，不放入網址或前端。網站讀取請求不帶 Google OAuth 或 cookie，私人或不存在檔案會失敗，不會改用已登入者憑證重試。網站公開 API 只回傳已驗證的旅行內容。
