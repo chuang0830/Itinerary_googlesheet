@@ -99,3 +99,37 @@ test('English trip board and management pages inherit their own spreadsheet lang
   assert.match(settingsPage, /Trip details/);
   assert.doesNotMatch(settingsPage, /網站設定|旅行資訊|主題色/);
 });
+
+test('home sign-in and new-trip page default to English while keeping both language radios', async () => {
+  const { CreateTripPage } = await import('../components/trip/create-trip-page');
+  const signedOut = renderToStaticMarkup(
+    React.createElement(CreateTripPage, { authorized: false, configured: true }),
+  );
+  assert.match(signedOut, /Sign in with Google to create a trip/);
+  assert.match(signedOut, /One trip. One Google Sheet/);
+  assert.doesNotMatch(signedOut, /請點選|關於公開分享|正在前往/);
+  const signedIn = renderToStaticMarkup(React.createElement(CreateTripPage, { authorized: true }));
+  assert.match(signedIn, /type="radio" name="language" checked="" value="en"/);
+  assert.match(signedIn, /value="zh-TW"/);
+  assert.match(signedIn, /Trip name/);
+});
+
+test('trip loading heading and description use fixed locale keys in both languages', async () => {
+  const { TripLoadingContent } = await import('../components/trip/trip-loading');
+  const english = renderToStaticMarkup(
+    React.createElement(TripLanguageProvider, {
+      language: 'en',
+      children: React.createElement(TripLoadingContent),
+    }),
+  );
+  assert.match(english, /Loading trip…/);
+  assert.match(english, /Fetching the latest data from Google Sheets/);
+  const chinese = renderToStaticMarkup(
+    React.createElement(TripLanguageProvider, {
+      language: 'zh-TW',
+      children: React.createElement(TripLoadingContent),
+    }),
+  );
+  assert.match(chinese, /正在讀取旅行…/);
+  assert.match(chinese, /正在從 Google Sheets 取得最新資料。/);
+});

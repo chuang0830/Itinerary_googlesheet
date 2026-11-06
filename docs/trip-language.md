@@ -1,6 +1,6 @@
 # 旅行介面語言
 
-建立表單可選繁體中文或 English；選擇後，表單與預覽立即切換。
+首頁、登入提示與建立表單預設使用 English。建立表單以 radio 選擇 English 或繁體中文；選擇後，表單與預覽立即切換。
 建立時將 `language` 作為 Key / Value 存入同份 Spreadsheet 的 Settings：
 
 | Key      | Value       |

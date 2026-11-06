@@ -1,10 +1,12 @@
 'use client';
 
+import { CreateTripSignIn } from '@/components/auth/create-trip-sign-in';
 import { CreateTripForm } from './create-trip-form';
 import { TripHeader } from './trip-header';
 import { TripLanguageProvider, useTripLanguage } from './trip-language';
 
-function CreateTripContent() {
+type CreateTripPageProps = { authorized?: boolean; configured?: boolean; error?: string };
+function CreateTripContent({ authorized = true, configured = false, error }: CreateTripPageProps) {
   const { t } = useTripLanguage();
   return (
     <main className="page-shell">
@@ -16,7 +18,7 @@ function CreateTripContent() {
           <strong>{t('tripTagline')}</strong>
         </p>
       </section>
-      <CreateTripForm />
+      {authorized ? <CreateTripForm /> : <CreateTripSignIn configured={configured} error={error} />}
       <aside className="share-note">
         <span aria-hidden="true">↗</span>
         <p>
@@ -32,10 +34,10 @@ function CreateTripContent() {
   );
 }
 
-export function CreateTripPage() {
+export function CreateTripPage(props: CreateTripPageProps) {
   return (
-    <TripLanguageProvider>
-      <CreateTripContent />
+    <TripLanguageProvider language="en">
+      <CreateTripContent {...props} />
     </TripLanguageProvider>
   );
 }

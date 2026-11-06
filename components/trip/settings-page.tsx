@@ -1,4 +1,6 @@
 'use client';
+import { rememberTripLanguage } from '@/lib/trip/language-hint';
+import { RefreshIcon } from '@/components/shared/refresh-icon';
 import { useTripLanguage, TripLanguageProvider } from '@/components/trip/trip-language';
 import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
 import { AccountAvatar } from '@/components/auth/account-avatar';
@@ -20,6 +22,9 @@ function SettingsPageContent({
   const { t, localizeMessage, setLanguage } = useTripLanguage();
 
   const [settings, setSettings] = useState(initialSettings);
+  useEffect(() => {
+    if (settings) rememberTripLanguage(spreadsheetId, settings.language);
+  }, [spreadsheetId, settings]);
   const [draft, setDraft] = useState(initialSettings);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -202,13 +207,15 @@ function SettingsPageContent({
                 </button>
               )}
               <button
-                className="button"
+                className="button refresh-button"
+                aria-label={t('refresh')}
+                title={t('refresh')}
                 disabled={busy}
                 onClick={() => {
                   void reload();
                 }}
               >
-                {t('refresh')}
+                <RefreshIcon />
               </button>
             </>
           )}

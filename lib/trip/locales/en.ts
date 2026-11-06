@@ -267,5 +267,14 @@ const en: Record<TranslationKey, string> = {
   nextJourney: 'YOUR NEXT JOURNEY',
   addPlan: '＋ Add a plan',
   syncFailed: 'Sync failed. Retry.',
+  createTripSignInLabel: 'Sign in to create a trip',
+  googleSignInNotConfigured: 'Google sign-in is not configured. Complete the website setup first.',
+  createTripSignInFailed:
+    'Google sign-in or authorization was not completed. Try again to create your trip.',
+  createTripSignInHelp:
+    'Sign in with Google using the button below. You will return here to create your trip.',
+  googleSignInAndCreateTrip: 'Sign in with Google to create a trip',
+  loadingTrip: 'Loading trip…',
+  loadingTripDescription: 'Fetching the latest data from Google Sheets.',
 };
 export default en;

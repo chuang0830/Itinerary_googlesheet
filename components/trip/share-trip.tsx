@@ -1,6 +1,6 @@
 'use client';
 import { useTripLanguage } from '@/components/trip/trip-language';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 export function ShareTrip({
   spreadsheetId,
   tripName = 'Travel Planner',
@@ -16,17 +16,16 @@ export function ShareTrip({
   const titleId = useId();
   const [url, setUrl] = useState('');
   const [local, setLocal] = useState(false);
-  const [nativeShare, setNativeShare] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
-  useEffect(() => {
-    setNativeShare(typeof navigator.share === 'function');
-  }, []);
   function open() {
-    setUrl(`${window.location.origin}/${spreadsheetId}`);
+    if (busy) return;
+    const shareUrl = `${window.location.origin}/${spreadsheetId}`;
+    setUrl(shareUrl);
     setLocal(['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname));
     setStatus('');
-    dialog.current?.showModal();
+    if (typeof navigator.share === 'function') void share(shareUrl);
+    else dialog.current?.showModal();
   }
   async function copy() {
     if (busy) return;
@@ -41,23 +40,30 @@ export function ShareTrip({
       setBusy(false);
     }
   }
-  async function share() {
+  async function share(shareUrl: string) {
     if (busy) return;
     setBusy(true);
     setStatus('');
     try {
-      await navigator.share({ title: tripName, url });
+      await navigator.share({ title: tripName, url: shareUrl });
       setStatus('已完成系統分享。');
     } catch (error) {
-      if (!(error instanceof DOMException && error.name === 'AbortError'))
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
         setStatus('無法開啟系統分享，請使用複製網址。');
+        dialog.current?.showModal();
+      }
     } finally {
       setBusy(false);
     }
   }
   return (
     <>
-      <button type="button" className={menu ? 'menu-action' : 'button button-quiet'} onClick={open}>
+      <button
+        type="button"
+        className={menu ? 'menu-action' : 'button share-floating'}
+        disabled={busy}
+        onClick={open}
+      >
         {menu ? t('menuShareTrip') : t('shareButton')}
       </button>
       <dialog ref={dialog} className="share-dialog" aria-labelledby={titleId}>
@@ -93,18 +99,6 @@ export function ShareTrip({
           >
             {t('copyTripUrl')}
           </button>
-          {nativeShare && (
-            <button
-              type="button"
-              className="button"
-              disabled={busy}
-              onClick={() => {
-                void share();
-              }}
-            >
-              {t('shareWithAnotherApp')}
-            </button>
-          )}
         </div>
         <p className="share-result" role="status">
           {busy ? t('processing') : localizeMessage(status)}

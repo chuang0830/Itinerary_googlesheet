@@ -240,5 +240,12 @@ const zhTW = {
   nextJourney: '你的下一趟旅行',
   addPlan: '＋ 新增行程',
   syncFailed: '同步失敗，請重試。',
+  createTripSignInLabel: '建立旅行登入',
+  googleSignInNotConfigured: 'Google 登入尚未設定，請先完成網站環境設定。',
+  createTripSignInFailed: 'Google 登入或授權未完成，請重試後建立新旅行。',
+  createTripSignInHelp: '請點選下方按鈕登入 Google，完成後將返回建立新旅行頁面。',
+  googleSignInAndCreateTrip: 'Google 登入並建立旅行',
+  loadingTrip: '正在讀取旅行…',
+  loadingTripDescription: '正在從 Google Sheets 取得最新資料。',
 } as const;
 export default zhTW;

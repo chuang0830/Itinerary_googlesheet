@@ -3,12 +3,12 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Travel Planner',
-  description: '以 Google Sheets 管理每一趟旅行。',
+  description: 'Plan every trip with Google Sheets.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-Hant">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

@@ -164,8 +164,8 @@ export function CreateTripForm() {
             <legend>{t('languageLabel')}</legend>
             {(
               [
-                { value: 'zh-TW', label: '繁體中文' },
                 { value: 'en', label: 'English' },
+                { value: 'zh-TW', label: '繁體中文' },
               ] as const
             ).map((option) => (
               <label className="theme-option" key={option.value}>
