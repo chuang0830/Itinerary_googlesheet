@@ -1,5 +1,7 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { themeKeys } from '@/lib/trip/translations';
+import { useTripLanguage } from '@/components/trip/trip-language';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { THEMES } from '@/lib/trip/create-schema';
 import type { CreationResult } from '@/lib/trip/creation';
 const STORAGE_KEY = 'travel-pending-creation';
@@ -8,10 +10,18 @@ const newKey = () =>
     b.toString(16).padStart(2, '0'),
   ).join('');
 export function CreateTripForm() {
+  const { t, localizeMessage, language, setLanguage } = useTripLanguage();
+
   const [operation, setOperation] = useState<CreationResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [color, setColor] = useState<string>(THEMES[0].value);
+  const [preview, setPreview] = useState({
+    tripName: '',
+    subtitle: '',
+    startDate: '',
+    endDate: '',
+  });
   const [pendingKey, setPendingKey] = useState('');
   const submitting = useRef(false);
   const accept = useCallback((result: CreationResult) => {
@@ -78,6 +88,7 @@ export function CreateTripForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...values,
+          language,
           themeColor: color,
           publicConsent: values.publicConsent === 'on',
           requestKey: key,
@@ -129,31 +140,71 @@ export function CreateTripForm() {
     setError('');
   }
   return (
-    <section className="home-card create-trip" id="create-trip">
-      <div className="eyebrow">A NEW JOURNEY</div>
-      <h2>建立新旅行</h2>
-      <form onSubmit={submit}>
+    <section
+      className="create-trip"
+      id="create-trip"
+      style={{ '--green': color, '--soft': `${color}15` } as CSSProperties}
+    >
+      <div className="eyebrow">{t('newJourney')}</div>
+      <h2>{t('createNewTrip')}</h2>
+      <form
+        onSubmit={submit}
+        onChange={(event) => {
+          const data = new FormData(event.currentTarget);
+          setPreview({
+            tripName: String(data.get('tripName') || ''),
+            subtitle: String(data.get('subtitle') || ''),
+            startDate: String(data.get('startDate') || ''),
+            endDate: String(data.get('endDate') || ''),
+          });
+        }}
+      >
         <fieldset disabled={busy || Boolean(pendingKey)} className="trip-fields">
+          <fieldset className="theme-options">
+            <legend>{t('languageLabel')}</legend>
+            {(
+              [
+                { value: 'zh-TW', label: '繁體中文' },
+                { value: 'en', label: 'English' },
+              ] as const
+            ).map((option) => (
+              <label className="theme-option" key={option.value}>
+                <input
+                  type="radio"
+                  name="language"
+                  value={option.value}
+                  checked={language === option.value}
+                  onChange={() => setLanguage(option.value)}
+                />
+                {option.label}
+              </label>
+            ))}
+          </fieldset>
           <label>
-            旅行名稱
-            <input name="tripName" required maxLength={100} placeholder="例如：Thailand Trip" />
+            {t('tripName')}
+            <input
+              name="tripName"
+              required
+              maxLength={100}
+              placeholder={t('tripNamePlaceholder')}
+            />
           </label>
           <label>
-            副標題
-            <input name="subtitle" maxLength={200} placeholder="例如：Bangkok & Chiang Mai" />
+            {t('subtitle')}
+            <input name="subtitle" maxLength={200} placeholder={t('subtitlePlaceholder')} />
           </label>
           <div className="date-fields">
             <label>
-              開始日期
+              {t('startDate')}
               <input name="startDate" type="date" required />
             </label>
             <label>
-              結束日期
+              {t('endDate')}
               <input name="endDate" type="date" required />
             </label>
           </div>
           <fieldset className="theme-options">
-            <legend>主題色</legend>
+            <legend>{t('themeColor')}</legend>
             {THEMES.map((theme) => (
               <label key={theme.value} className="theme-option">
                 <input
@@ -164,32 +215,39 @@ export function CreateTripForm() {
                   onChange={() => setColor(theme.value)}
                 />
                 <span className="theme-swatch" style={{ background: theme.value }} />
-                {theme.name}
+                {t(themeKeys[theme.value])}
               </label>
             ))}
           </fieldset>
           <label className="public-consent">
             <input name="publicConsent" type="checkbox" required />
-            <span>
-              我了解：新試算表會設為「任何知道連結的人都可檢視」，原始 Google Sheets
-              內容也會公開給知道連結的人。請勿填入敏感資料。
-            </span>
+            <span>{t('publicSharingConsent')}</span>
           </label>
         </fieldset>
         {!pendingKey && (
           <button className="button button-primary create-submit" type="submit" disabled={busy}>
-            建立旅行
+            {t('createTrip')}
           </button>
         )}
       </form>
+      <section className="day-summary settings-preview" aria-label={t('liveTripPreview')}>
+        <div className="summary-copy">
+          <span className="summary-date">{t('newTripPreview')}</span>
+          <h2>{preview.tripName || t('tripName')}</h2>
+          <p>{preview.subtitle || t('tripSubtitle')}</p>
+          <span className="summary-date">
+            {preview.startDate || t('startDate')} — {preview.endDate || t('endDate')}
+          </span>
+        </div>
+      </section>
       <div role="status" aria-live="polite">
-        {busy && <p>正在處理，請稍候…</p>}
-        {operation?.state === 'creating' && <p>正在建立試算表…</p>}
-        {operation?.message && <p>{operation.message}</p>}
+        {busy && <p>{t('processingPleaseWait')}</p>}
+        {operation?.state === 'creating' && <p>{t('creatingSpreadsheet')}</p>}
+        {operation?.message && <p>{localizeMessage(operation.message)}</p>}
       </div>
       {error && (
         <p className="auth-message" role="alert">
-          {error}
+          {localizeMessage(error)}
         </p>
       )}
       {pendingKey && (
@@ -201,7 +259,7 @@ export function CreateTripForm() {
               disabled={busy}
               onClick={retryPublish}
             >
-              重試公開設定
+              {t('retryPublicSharing')}
             </button>
           )}
           <button
@@ -212,7 +270,7 @@ export function CreateTripForm() {
               void recover(pendingKey);
             }}
           >
-            查詢建立進度
+            {t('checkCreationProgress')}
           </button>
           {operation?.spreadsheetId && (
             <a
@@ -221,12 +279,12 @@ export function CreateTripForm() {
               rel="noopener noreferrer"
               href={`https://docs.google.com/spreadsheets/d/${operation.spreadsheetId}/edit`}
             >
-              開啟已建立的 Google Sheets
+              {t('openTheCreatedGoogleSheet')}
             </a>
           )}
           {operation?.state === 'create_failed' && (
             <button type="button" className="button" disabled={busy} onClick={reset}>
-              重新填寫並建立
+              {t('startAgain')}
             </button>
           )}
           {(operation?.state === 'uncertain' || (!operation && error)) && (
@@ -237,22 +295,17 @@ export function CreateTripForm() {
                 rel="noopener noreferrer"
                 href="https://drive.google.com/drive/u/0/recent"
               >
-                到 Google Drive 確認
+                {t('checkGoogleDrive')}
               </a>
               <button
                 type="button"
                 className="button"
                 disabled={busy}
                 onClick={() => {
-                  if (
-                    window.confirm(
-                      '請先確認 Google Drive 沒有已建立的試算表。清除進度後再次建立，可能產生重複檔案。確定清除？',
-                    )
-                  )
-                    reset();
+                  if (window.confirm(t('clearCreationProgressConfirm'))) reset();
                 }}
               >
-                確認後清除本機進度
+                {t('clearLocalProgressAfterChecking')}
               </button>
             </>
           )}

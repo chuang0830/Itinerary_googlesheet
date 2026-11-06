@@ -55,8 +55,11 @@ function fixture() {
         }
       ).requests) {
         const update = request.updateCells;
-        copy.values[update.start.rowIndex][update.start.columnIndex] =
-          update.rows[0].values[0].userEnteredValue.stringValue;
+        copy.values[update.start.rowIndex] ??= [];
+        update.rows[0].values.forEach((cell, offset) => {
+          copy.values[update.start.rowIndex][update.start.columnIndex + offset] =
+            cell.userEnteredValue.stringValue;
+        });
       }
       raw = copy;
     },
@@ -105,6 +108,7 @@ test('dates and equals-prefixed titles are written using literal stringValue, on
   const body = settingsWrite(f.raw(), { ...settings, tripName: '=not a formula' });
   assert.equal(body.requests.length, 5);
   for (const request of body.requests) {
+    assert.ok('updateCells' in request);
     assert.equal(request.updateCells.start.columnIndex, 1);
     assert.equal(request.updateCells.fields, 'userEnteredValue');
   }
@@ -178,4 +182,17 @@ test('formula and malformed settings are not silently overwritten; versions dete
     () => settingsWrite({ ...f.raw(), values: [['Key', 'Value']] }, settings),
     ItineraryError,
   );
+});
+
+test('Done adds a language setting to a legacy trip and later changes it without touching unknown keys', async () => {
+  const f = fixture();
+  const snapshot = await loadSettings(f.gateway);
+  const first = await saveSettings(f.gateway, snapshot.version, { ...settings, language: 'en' });
+  assert.equal(first.settings.language, 'en');
+  assert.deepEqual(f.raw().values.at(-1), ['language', 'en']);
+  assert.deepEqual(f.raw().values[1], ['future', 123]);
+  const second = await saveSettings(f.gateway, first.version, { ...settings, language: 'zh-TW' });
+  assert.equal(second.settings.language, 'zh-TW');
+  assert.equal(f.raw().values.filter((row) => row[0] === 'language').length, 1);
+  assert.equal(second.settings.tripName, settings.tripName);
 });

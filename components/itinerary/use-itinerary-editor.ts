@@ -73,7 +73,7 @@ export function useItineraryEditor(id: string, onSnapshot: (trip: TripData) => v
     setEditing(false);
     setError('');
     setBlocked(false);
-    setStatus('已取消，未儲存的修改已放棄。');
+    setStatus('已取消，未儲存修改已放棄。');
   }
   async function done() {
     if (saving.current || blocked) return;

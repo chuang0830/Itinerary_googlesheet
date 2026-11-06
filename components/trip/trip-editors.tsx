@@ -1,8 +1,11 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import { useEffect, useState } from 'react';
 import type { TripEditor } from '@/lib/trip/editors';
 
 export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
+  const { t, localizeMessage } = useTripLanguage();
+
   const [editors, setEditors] = useState<TripEditor[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'private' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -70,21 +73,19 @@ export function TripEditors({ spreadsheetId }: { spreadsheetId: string }) {
           </span>
         ))}
         <span className="companions-label">
-          {state === 'ready' && editors.length > 0
-            ? 'Shared trip board'
-            : 'who is sharing trip board ?'}
+          {state === 'ready' && editors.length > 0 ? t('sharedTripBoard') : t('whoSharesTripBoard')}
         </span>
-        {state === 'loading' && <span role="status">讀取中…</span>}
+        {state === 'loading' && <span role="status">{t('loadingMembers')}</span>}
       </div>
       {state === 'error' && (
         <p className="editors-note" role="status">
-          {memberError || '暫時無法讀取成員。'}
+          {memberError ? localizeMessage(memberError) : t('membersAreTemporarilyUnavailable')}
           <button
             type="button"
             className="editors-retry"
             onClick={() => setAttempt((value) => value + 1)}
           >
-            重試
+            {t('retry')}
           </button>
         </p>
       )}

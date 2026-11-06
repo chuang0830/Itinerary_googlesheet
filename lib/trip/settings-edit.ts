@@ -10,6 +10,7 @@ export const SETTINGS_KEYS = [
   'startDate',
   'endDate',
   'themeColor',
+  'language',
 ] as const;
 export function submittedSettings(input: unknown): TripSettings {
   if (!input || typeof input !== 'object' || Array.isArray(input))
@@ -42,19 +43,47 @@ export function settingsVersion(raw: RawItinerary) {
     .digest('hex');
 }
 export function settingsWrite(raw: RawItinerary, settings: TripSettings) {
-  // Update only the five known Value cells, preserving row order, keys, and future settings.
+  // Preserve existing keys and row positions; append the optional language key for older trips.
   return {
-    requests: SETTINGS_KEYS.map((key) => {
-      const index = raw.values.findIndex((row, i) => i > 0 && String(row[0] ?? '').trim() === key);
-      if (index < 0) throw new ItineraryError(`Settings 缺少 ${key}，請先在 Sheets 修正。`, 409);
-      return {
-        updateCells: {
-          start: { sheetId: raw.sheetId, rowIndex: index, columnIndex: 1 },
-          rows: [{ values: [{ userEnteredValue: { stringValue: settings[key] } }] }],
-          fields: 'userEnteredValue',
+    requests: [
+      ...(settings.language &&
+      !raw.values.some((row) => row[0] === 'language') &&
+      raw.values.length >= raw.rowCount
+        ? [{ appendDimension: { sheetId: raw.sheetId, dimension: 'ROWS', length: 1 } }]
+        : []),
+      ...SETTINGS_KEYS.filter((key) => key !== 'language' || settings.language !== undefined).map(
+        (key) => {
+          const index = raw.values.findIndex(
+            (row, i) => i > 0 && String(row[0] ?? '').trim() === key,
+          );
+          if (index < 0 && key === 'language') {
+            return {
+              updateCells: {
+                start: { sheetId: raw.sheetId, rowIndex: raw.values.length, columnIndex: 0 },
+                rows: [
+                  {
+                    values: [
+                      { userEnteredValue: { stringValue: 'language' } },
+                      { userEnteredValue: { stringValue: settings.language } },
+                    ],
+                  },
+                ],
+                fields: 'userEnteredValue',
+              },
+            };
+          }
+          if (index < 0)
+            throw new ItineraryError(`Settings 缺少 ${key}，請先在 Sheets 修正。`, 409);
+          return {
+            updateCells: {
+              start: { sheetId: raw.sheetId, rowIndex: index, columnIndex: 1 },
+              rows: [{ values: [{ userEnteredValue: { stringValue: settings[key] } }] }],
+              fields: 'userEnteredValue',
+            },
+          };
         },
-      };
-    }),
+      ),
+    ],
   };
 }
 export async function loadSettings(gateway: ItineraryGateway) {

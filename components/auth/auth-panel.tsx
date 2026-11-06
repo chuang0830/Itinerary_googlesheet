@@ -56,9 +56,12 @@ export function AuthPanel({
                 Google 登入
               </button>
             </form>
-            <button className="button" disabled>
-              建立新旅行（下一階段開放）
-            </button>
+            <form action="/api/auth/signin" method="post">
+              <input type="hidden" name="returnTo" value="/#create-trip" />
+              <button className="button" disabled={!configured}>
+                建立新旅行
+              </button>
+            </form>
           </div>
           {!configured && <p className="phase-note">Google 登入尚未啟用，請先完成網站環境設定。</p>}
         </>

@@ -1,4 +1,5 @@
 'use client';
+import { useTripLanguage, TripLanguageProvider } from '@/components/trip/trip-language';
 import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
 import { AccountAvatar } from '@/components/auth/account-avatar';
 import { TripAccessNotice } from './trip-access-notice';
@@ -12,7 +13,7 @@ import { EditPlanList } from '@/components/itinerary/edit-plan-list';
 import { useItineraryEditor } from '@/components/itinerary/use-itinerary-editor';
 import { PlanList } from '@/components/itinerary/plan-list';
 import { dailyData, tripDates, type TripData } from '@/lib/trip/read';
-export function TripBoard({
+function TripBoardContent({
   spreadsheetId,
   initialTrip,
   initialError,
@@ -21,7 +22,13 @@ export function TripBoard({
   initialTrip: TripData | null;
   initialError: string;
 }) {
+  const { t, localizeMessage, setLanguage } = useTripLanguage();
+
   const [trip, setTrip] = useState(initialTrip);
+  useEffect(
+    () => setLanguage(trip?.settings.language || 'zh-TW'),
+    [trip?.settings.language, setLanguage],
+  );
   const [selected, setSelected] = useState(initialTrip?.settings.startDate || '');
   const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
@@ -97,7 +104,9 @@ export function TripBoard({
             tripName={settings?.tripName}
           />
           <a className="brand" href="/">
-            TRAVEL <span>✳</span>　PLANNER
+            {'TRAVEL'}
+            <span>✳</span>
+            {'PLANNER'}
           </a>
         </div>
         <div className="top-actions">
@@ -108,7 +117,7 @@ export function TripBoard({
                 disabled={editor.busy}
                 onClick={editor.cancel}
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 className="button button-primary"
@@ -117,7 +126,7 @@ export function TripBoard({
                   void editor.done();
                 }}
               >
-                Done
+                {t('done')}
               </button>
             </>
           ) : (
@@ -131,7 +140,7 @@ export function TripBoard({
                     className="button button-primary"
                     disabled={loading || editor.busy}
                   >
-                    {editor.needsLogin ? 'Google 登入' : '完成登入'}
+                    {editor.needsLogin ? t('googleSignIn') : t('completeSignIn')}
                   </button>
                 </form>
               )}
@@ -143,7 +152,7 @@ export function TripBoard({
                     void editor.enter();
                   }}
                 >
-                  Edit
+                  {t('edit')}
                 </button>
               )}
               <button
@@ -153,7 +162,7 @@ export function TripBoard({
                   void reload();
                 }}
               >
-                重新讀取
+                {t('refresh')}
               </button>
             </>
           )}
@@ -162,14 +171,15 @@ export function TripBoard({
       </header>
       {editor.error === READ_ONLY_NOTICE && (
         <aside className="auth-message" role="status">
-          {READ_ONLY_NOTICE}
+          {t('readOnlyNotice')}
         </aside>
       )}
       <TripAccessNotice canEdit={editor.canEdit} />
       {settings && (
         <section className="intro" id="top">
           <div className="eyebrow">
-            TRIP BOARD　·　{settings.startDate} — {settings.endDate}
+            {t('tripBoardLabel')}
+            {settings.startDate} — {settings.endDate}
           </div>
           <h1>{settings.tripName}</h1>
           {settings.subtitle && (
@@ -182,8 +192,8 @@ export function TripBoard({
       )}
       {error && (
         <section className="home-card" role="alert">
-          <h2>目前無法顯示行程</h2>
-          <p>{error}</p>
+          <h2>{t('itineraryUnavailable')}</h2>
+          <p>{localizeMessage(error)}</p>
           <button
             className="button button-primary"
             disabled={loading}
@@ -191,13 +201,13 @@ export function TripBoard({
               void reload();
             }}
           >
-            重試讀取
+            {t('retryLoading')}
           </button>
         </section>
       )}
       {editor.error && (editor.error !== READ_ONLY_NOTICE || editor.editing) && (
         <section className="auth-message" role="alert">
-          {editor.error !== READ_ONLY_NOTICE && <p>{editor.error}</p>}
+          {editor.error !== READ_ONLY_NOTICE && <p>{localizeMessage(editor.error)}</p>}
           {editor.editing && (
             <>
               <button
@@ -206,7 +216,7 @@ export function TripBoard({
                   void editor.copy();
                 }}
               >
-                複製草稿
+                {t('copyDraft')}
               </button>
               {editor.blocked && (
                 <button
@@ -216,7 +226,7 @@ export function TripBoard({
                     void reload();
                   }}
                 >
-                  放棄草稿並重新載入
+                  {t('discardDraftAndReload')}
                 </button>
               )}
             </>
@@ -239,13 +249,13 @@ export function TripBoard({
           />
           <DaySummary date={selected} stays={day.stays} transport={day.transport} />
           <div className="section-title">
-            <h3>Today's plans</h3>
+            <h3>{t('todaysPlans')}</h3>
             <span role="status">
               {editor.editing
-                ? 'Edit plans and links, or drag to reorder · Done 儲存 / Cancel 放棄'
+                ? t('editPlansHelp')
                 : loading
-                  ? '正在重新讀取 Google Sheets…'
-                  : `${selected} · 已讀取 Google Sheets`}
+                  ? t('refreshingGoogleSheets')
+                  : `${selected} · ${t('loadedFromGoogleSheets')}`}
             </span>
           </div>
           {editor.editing ? (
@@ -263,10 +273,9 @@ export function TripBoard({
           <aside className="share-note">
             <span aria-hidden="true">💬</span>
             <p>
-              <strong>Share this trip</strong>
+              <strong>{t('shareTrip')}</strong>
               <br />
-              知道連結的人可查看行程。有編輯權限可按 Edit 修改；按 Done 儲存，Cancel 放棄。也可在
-              Google Sheets 編輯後重新讀取。
+              {t('tripSharingHelp')}
             </p>
           </aside>
         </>
@@ -276,8 +285,12 @@ export function TripBoard({
         role="status"
       >
         <span className="status-dot" />
-        {editor.status ||
-          (loading ? '正在讀取…' : trip ? '已讀取 Google Sheets' : 'Google Sheets 尚未讀取成功')}
+        {localizeMessage(editor.status) ||
+          (loading
+            ? t('loading')
+            : trip
+              ? t('loadedFromGoogleSheets')
+              : t('googleSheetsHasNotLoaded'))}
       </div>
       <footer>
         <a
@@ -285,10 +298,18 @@ export function TripBoard({
           rel="noopener noreferrer"
           href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`}
         >
-          Open Google Sheets ↗
+          {t('openGoogleSheets')}
         </a>
-        <p>修改只會在按下 Done 後儲存。</p>
+        <p>{t('changesAreSavedOnlyWhenYouChooseDone')}</p>
       </footer>
     </main>
+  );
+}
+
+export function TripBoard(props: Parameters<typeof TripBoardContent>[0]) {
+  return (
+    <TripLanguageProvider language={props.initialTrip?.settings.language}>
+      <TripBoardContent {...props} />
+    </TripLanguageProvider>
   );
 }

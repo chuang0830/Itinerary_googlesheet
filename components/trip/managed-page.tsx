@@ -1,4 +1,6 @@
 'use client';
+import { transportTypeKeys, type TranslationKey } from '@/lib/trip/translations';
+import { useTripLanguage, TripLanguageProvider } from '@/components/trip/trip-language';
 import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
 import { AccountAvatar } from '@/components/auth/account-avatar';
 import { TripAccessNotice } from './trip-access-notice';
@@ -13,25 +15,25 @@ import {
   type ManagedSheet,
 } from '@/lib/trip/managed-schema';
 import type { TripData } from '@/lib/trip/read';
-const labels: Record<string, string> = {
-  Name: '飯店名稱',
-  City: '城市',
-  CheckIn: '入住日期',
-  CheckOut: '退房日期',
-  MapURL: 'Google Maps 連結',
-  Type: '交通類型',
-  From: '出發地',
-  To: '目的地',
-  DepartureDate: '出發日期',
-  DepartureTime: '出發時間',
-  ArrivalDate: '抵達日期',
-  ArrivalTime: '抵達時間',
-  Carrier: '航空公司／交通業者',
-  Number: '航班／車次',
-  BookingURL: '訂票連結',
+const labels: Record<string, TranslationKey> = {
+  Name: 'hotelName',
+  City: 'city',
+  CheckIn: 'checkIn',
+  CheckOut: 'checkOut',
+  MapURL: 'mapUrl',
+  Type: 'transportType',
+  From: 'departurePlace',
+  To: 'destination',
+  DepartureDate: 'departureDate',
+  DepartureTime: 'departureTime',
+  ArrivalDate: 'arrivalDate',
+  ArrivalTime: 'arrivalTime',
+  Carrier: 'carrier',
+  Number: 'serviceNumber',
+  BookingURL: 'bookingUrl',
 };
 type Draft = Record<string, string>;
-export function ManagedPage({
+function ManagedPageContent({
   spreadsheetId,
   sheet,
   initialTrip,
@@ -42,7 +44,13 @@ export function ManagedPage({
   initialTrip: TripData | null;
   initialError: string;
 }) {
+  const { t, localizeMessage, setLanguage } = useTripLanguage();
+
   const [trip, setTrip] = useState(initialTrip);
+  useEffect(
+    () => setLanguage(trip?.settings.language || 'zh-TW'),
+    [trip?.settings.language, setLanguage],
+  );
   const initialRows = initialTrip
     ? sheet === 'Accommodation'
       ? initialTrip.accommodation
@@ -62,7 +70,7 @@ export function ManagedPage({
   const counter = useRef(0);
   const saving = useRef(false);
   const slug = sheetSlug(sheet);
-  const title = sheet === 'Accommodation' ? 'Accommodation · 住宿' : 'Transportation · 交通';
+  const title = sheet === 'Accommodation' ? 'accommodationTitle' : 'transportationTitle';
   const headers = HEADERS[sheet];
   useEffect(() => {
     const controller = new AbortController();
@@ -223,14 +231,16 @@ export function ManagedPage({
             tripName={trip?.settings.tripName}
           />
           <a className="brand" href={`/${spreadsheetId}`}>
-            TRAVEL <span>✳</span>　PLANNER
+            {'TRAVEL'}
+            <span>✳</span>
+            {'PLANNER'}
           </a>
         </div>
         <div className="top-actions">
           {editing ? (
             <>
               <button className="button button-quiet" disabled={busy} onClick={cancel}>
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 className="button button-primary"
@@ -239,7 +249,7 @@ export function ManagedPage({
                   void done();
                 }}
               >
-                Done
+                {t('done')}
               </button>
             </>
           ) : (
@@ -248,7 +258,7 @@ export function ManagedPage({
                 <form action="/api/auth/signin" method="post">
                   <input type="hidden" name="returnTo" value={`/${spreadsheetId}/${slug}`} />
                   <button type="submit" className="button button-primary" disabled={busy}>
-                    {needsLogin ? 'Google 登入' : '完成登入'}
+                    {needsLogin ? t('googleSignIn') : t('completeSignIn')}
                   </button>
                 </form>
               )}
@@ -260,7 +270,7 @@ export function ManagedPage({
                     void enter();
                   }}
                 >
-                  Edit
+                  {t('edit')}
                 </button>
               )}
               <button
@@ -270,7 +280,7 @@ export function ManagedPage({
                   void reload();
                 }}
               >
-                重新讀取
+                {t('refresh')}
               </button>
             </>
           )}
@@ -279,22 +289,22 @@ export function ManagedPage({
       </header>
       {error === READ_ONLY_NOTICE && (
         <aside className="auth-message" role="status">
-          {READ_ONLY_NOTICE}
+          {t('readOnlyNotice')}
         </aside>
       )}
       <TripAccessNotice canEdit={canEdit} />
       <section className="intro">
         <div className="eyebrow">{trip?.settings.tripName || 'TRAVEL PLANNER'}</div>
-        <h1>{title}</h1>
+        <h1>{t(title)}</h1>
         <p>
           {sheet === 'Accommodation'
-            ? '入住日包含當晚，退房日不包含當晚。'
-            : '可新增多筆交通，出發與抵達日都會顯示在每日資訊卡。'}
+            ? t('checkInIncludesThatNightCheckOutDoesNot')
+            : t('transportationHelp')}
         </p>
       </section>
       {error && (error !== READ_ONLY_NOTICE || editing) && (
         <section className="auth-message" role="alert">
-          {error !== READ_ONLY_NOTICE && <p>{error}</p>}
+          {error !== READ_ONLY_NOTICE && <p>{localizeMessage(error)}</p>}
           {editing && (
             <>
               <button
@@ -303,7 +313,7 @@ export function ManagedPage({
                   void copy();
                 }}
               >
-                複製草稿
+                {t('copyDraft')}
               </button>
               {blocked && (
                 <button
@@ -313,7 +323,7 @@ export function ManagedPage({
                     void reload();
                   }}
                 >
-                  放棄草稿並重新載入
+                  {t('discardDraftAndReload')}
                 </button>
               )}
             </>
@@ -327,34 +337,35 @@ export function ManagedPage({
               <section className="home-card managed-card" key={row.uiKey}>
                 <div className="managed-card-heading">
                   <h2>
-                    {sheet === 'Accommodation' ? '住宿' : '交通'} {index + 1}
+                    {sheet === 'Accommodation' ? t('accommodation') : t('transportation')}{' '}
+                    {index + 1}
                   </h2>
                   <button
                     className="button"
                     disabled={busy || blocked}
                     onClick={() => remove(row.uiKey)}
                   >
-                    刪除
+                    {t('delete')}
                   </button>
                 </div>
                 <fieldset className="trip-fields managed-fields" disabled={busy || blocked}>
                   {headers.map((column) => (
                     <label key={column}>
-                      {labels[column]}
+                      {t(labels[column])}
                       {column === 'Type' ? (
                         <select
-                          aria-label={`${labels[column]} ${index + 1}`}
+                          aria-label={`${t(labels[column])} ${index + 1}`}
                           value={row[column]}
                           onChange={(event) => change(row.uiKey, column, event.target.value)}
                         >
-                          <option value="Flight">✈ 飛機</option>
-                          <option value="Train">🚆 火車</option>
-                          <option value="Bus">🚌 巴士</option>
-                          <option value="Other">其他</option>
+                          <option value="Flight">{t('flightOption')}</option>
+                          <option value="Train">{t('trainOption')}</option>
+                          <option value="Bus">{t('busOption')}</option>
+                          <option value="Other">{t('otherOption')}</option>
                         </select>
                       ) : (
                         <input
-                          aria-label={`${labels[column]} ${index + 1}`}
+                          aria-label={`${t(labels[column])} ${index + 1}`}
                           type={
                             column.endsWith('Date') || column === 'CheckIn' || column === 'CheckOut'
                               ? 'date'
@@ -376,16 +387,17 @@ export function ManagedPage({
             ))}
           </div>
           <button className="add-plan" disabled={busy || blocked} onClick={add}>
-            ＋ Add{' '}
-            {sheet === 'Accommodation' ? 'accommodation · 新增住宿' : 'transportation · 新增交通'}
+            {t('add')} {sheet === 'Accommodation' ? t('addAccommodation') : t('addTransportation')}
           </button>
         </>
       ) : (
         <div className="managed-list">
           {trip && !rows.length && (
             <section className="home-card empty-state">
-              目前沒有{sheet === 'Accommodation' ? '住宿' : '交通'}資料。
-              {canEdit && '按 Edit 新增。'}
+              {t('noRecordsPrefix')}
+              {sheet === 'Accommodation' ? t('accommodation') : t('transportation')}
+              {t('noRecordsSuffix')}
+              {canEdit && t('chooseEditToAddARecord')}
             </section>
           )}
           {rows.map((row, index) => {
@@ -397,12 +409,14 @@ export function ManagedPage({
                   {headers.map((column, i) =>
                     cells[i] ? (
                       <div key={column}>
-                        <dt>{labels[column]}</dt>
+                        <dt>{t(labels[column])}</dt>
                         <dd>
                           {column.endsWith('URL') ? (
                             <a href={cells[i]} target="_blank" rel="noopener noreferrer">
-                              開啟連結 ↗
+                              {t('openLink')}
                             </a>
+                          ) : column === 'Type' ? (
+                            t(transportTypeKeys[cells[i] as keyof typeof transportTypeKeys])
                           ) : (
                             cells[i]
                           )}
@@ -417,12 +431,20 @@ export function ManagedPage({
         </div>
       )}
       <p className="sync-status" role="status">
-        {busy ? '正在處理…' : status}
+        {busy ? t('processing') : localizeMessage(status)}
       </p>
       <footer>
-        <a href={`/${spreadsheetId}`}>← 返回每日行程</a>
-        <p>按 Done 才儲存；Cancel 放棄本次修改。</p>
+        <a href={`/${spreadsheetId}`}>{t('backToItinerary')}</a>
+        <p>{t('chooseDoneToSaveOrCancelToDiscardChanges')}</p>
       </footer>
     </main>
+  );
+}
+
+export function ManagedPage(props: Parameters<typeof ManagedPageContent>[0]) {
+  return (
+    <TripLanguageProvider language={props.initialTrip?.settings.language}>
+      <ManagedPageContent {...props} />
+    </TripLanguageProvider>
   );
 }

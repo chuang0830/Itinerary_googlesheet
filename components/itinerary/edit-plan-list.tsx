@@ -1,4 +1,5 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import {
   DndContext,
   closestCenter,
@@ -30,6 +31,8 @@ function SortablePlan({
   onChange: (key: string, patch: Partial<ItineraryRow>) => void;
   onRemove: (key: string) => void;
 }) {
+  const { t } = useTripLanguage();
+
   const {
     attributes,
     listeners,
@@ -48,7 +51,8 @@ function SortablePlan({
       <span className="plan-time">{row.Date.slice(5).replace('-', '/')}</span>
       <div className="plan-text">
         <input
-          aria-label={`Plan ${index + 1}`}
+          aria-label={`${t('plan')} ${index + 1}`}
+          data-plan-activity
           value={row.Activity}
           maxLength={2000}
           disabled={disabled}
@@ -56,10 +60,10 @@ function SortablePlan({
         />
         <input
           className="plan-link-input"
-          aria-label={`Link for plan ${index + 1}`}
+          aria-label={`${t('planLink')} ${index + 1}`}
           type="url"
           inputMode="url"
-          placeholder="Add a map or place link (optional)"
+          placeholder={t('mapLinkPlaceholder')}
           value={row.MapURL}
           maxLength={2048}
           disabled={disabled}
@@ -69,7 +73,7 @@ function SortablePlan({
       <div className="row-actions">
         <button
           className="remove-button"
-          aria-label={`Delete plan ${index + 1}`}
+          aria-label={`${t('deletePlan')} ${index + 1}`}
           disabled={disabled}
           onClick={() => onRemove(row.uiKey)}
         >
@@ -81,7 +85,7 @@ function SortablePlan({
           disabled={disabled}
           {...attributes}
           {...listeners}
-          aria-label={`Reorder plan ${index + 1}`}
+          aria-label={`${t('reorderPlan')} ${index + 1}`}
         >
           ⠿
         </button>
@@ -104,6 +108,8 @@ export function EditPlanList({
   onReorder: (from: string, to: string) => void;
   onAdd: () => void;
 }) {
+  const { t } = useTripLanguage();
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -119,8 +125,8 @@ export function EditPlanList({
           items={rows.map((row) => row.uiKey)}
           strategy={verticalListSortingStrategy}
         >
-          <section className="plan-list editing" aria-label="Edit itinerary cards">
-            {!rows.length && <p className="empty-state">No plans for today yet. Add one below.</p>}
+          <section className="plan-list editing" aria-label={t('editItineraryCards')}>
+            {!rows.length && <p className="empty-state">{t('noPlansAddBelow')}</p>}
             {rows.map((row, index) => (
               <SortablePlan
                 key={row.uiKey}
@@ -141,13 +147,13 @@ export function EditPlanList({
           onAdd();
           window.requestAnimationFrame(() => {
             const inputs = document.querySelectorAll<HTMLInputElement>(
-              '.editing input[aria-label^="Plan "]',
+              '.editing input[data-plan-activity]',
             );
             inputs[inputs.length - 1]?.focus();
           });
         }}
       >
-        ＋　Add a plan
+        {t('addPlan')}
       </button>
     </>
   );

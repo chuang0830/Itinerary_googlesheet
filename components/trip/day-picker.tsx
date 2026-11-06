@@ -1,7 +1,6 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 export type DayOption = { date: string; city?: string; hasPlans: boolean };
-const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'UTC' });
-const month = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' });
 export function DayPicker({
   days,
   selected,
@@ -11,8 +10,18 @@ export function DayPicker({
   selected: string;
   onSelect: (date: string) => void;
 }) {
+  const { t, language } = useTripLanguage();
+
+  const weekday = new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'zh-TW', {
+    weekday: 'short',
+    timeZone: 'UTC',
+  });
+  const month = new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'zh-TW', {
+    month: 'short',
+    timeZone: 'UTC',
+  });
   return (
-    <nav className="day-picker" aria-label="Choose a day">
+    <nav className="day-picker" aria-label={t('chooseDay')}>
       {days.map((day) => {
         const date = new Date(`${day.date}T00:00:00Z`);
         return (
@@ -24,7 +33,9 @@ export function DayPicker({
             onClick={() => onSelect(day.date)}
           >
             <span>
-              {month.format(date).toUpperCase()} · {weekday.format(date).toUpperCase()}
+              {month.format(date).toUpperCase()}
+              {' · '}
+              {weekday.format(date).toUpperCase()}
             </span>
             <strong>{date.getUTCDate()}</strong>
             {day.city && <small>{day.city}</small>}

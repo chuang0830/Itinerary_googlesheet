@@ -1,4 +1,5 @@
 'use client';
+import { useTripLanguage, TripLanguageProvider } from '@/components/trip/trip-language';
 import { READ_ONLY_NOTICE } from '@/lib/trip/access-state';
 import { AccountAvatar } from '@/components/auth/account-avatar';
 import { TripAccessNotice } from './trip-access-notice';
@@ -7,7 +8,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { TripMenu } from './trip-menu';
 import { THEMES } from '@/lib/trip/create-schema';
 import type { TripSettings } from '@/lib/trip/types';
-export function SettingsPage({
+function SettingsPageContent({
   spreadsheetId,
   initialSettings,
   initialError,
@@ -16,6 +17,8 @@ export function SettingsPage({
   initialSettings: TripSettings | null;
   initialError: string;
 }) {
+  const { t, localizeMessage, setLanguage } = useTripLanguage();
+
   const [settings, setSettings] = useState(initialSettings);
   const [draft, setDraft] = useState(initialSettings);
   const [editing, setEditing] = useState(false);
@@ -142,6 +145,7 @@ export function SettingsPage({
     }
   }
   const shown = editing ? draft : settings;
+  useEffect(() => setLanguage(shown?.language || 'zh-TW'), [shown?.language, setLanguage]);
   const theme = shown
     ? ({ '--green': shown.themeColor, '--soft': `${shown.themeColor}15` } as CSSProperties)
     : undefined;
@@ -155,14 +159,16 @@ export function SettingsPage({
             tripName={settings?.tripName}
           />
           <a className="brand" href={`/${spreadsheetId}`}>
-            TRAVEL <span>✳</span>　PLANNER
+            {'TRAVEL'}
+            <span>✳</span>
+            {'PLANNER'}
           </a>
         </div>
         <div className="top-actions">
           {editing ? (
             <>
               <button className="button button-quiet" disabled={busy} onClick={cancel}>
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 className="button button-primary"
@@ -171,7 +177,7 @@ export function SettingsPage({
                   void done();
                 }}
               >
-                Done
+                {t('done')}
               </button>
             </>
           ) : (
@@ -180,7 +186,7 @@ export function SettingsPage({
                 <form action="/api/auth/signin" method="post">
                   <input type="hidden" name="returnTo" value={`/${spreadsheetId}/settings`} />
                   <button type="submit" className="button button-primary" disabled={busy}>
-                    {needsLogin ? 'Google 登入' : '完成登入'}
+                    {needsLogin ? t('googleSignIn') : t('completeSignIn')}
                   </button>
                 </form>
               )}
@@ -192,7 +198,7 @@ export function SettingsPage({
                     void enter();
                   }}
                 >
-                  Edit
+                  {t('edit')}
                 </button>
               )}
               <button
@@ -202,7 +208,7 @@ export function SettingsPage({
                   void reload();
                 }}
               >
-                重新讀取
+                {t('refresh')}
               </button>
             </>
           )}
@@ -211,18 +217,18 @@ export function SettingsPage({
       </header>
       {error === READ_ONLY_NOTICE && (
         <aside className="auth-message" role="status">
-          {READ_ONLY_NOTICE}
+          {t('readOnlyNotice')}
         </aside>
       )}
       <TripAccessNotice canEdit={canEdit} />
       <section className="intro">
         <div className="eyebrow">{settings?.tripName || 'TRAVEL PLANNER'}</div>
-        <h1>Settings · 網站設定</h1>
-        <p>調整旅行資訊與主題色，按 Done 後套用。</p>
+        <h1>{t('settingsTitle')}</h1>
+        <p>{t('updateTripDetailsAndThemeThenChooseDoneToApply')}</p>
       </section>
       {error && (error !== READ_ONLY_NOTICE || editing) && (
         <section className="auth-message" role="alert">
-          {error !== READ_ONLY_NOTICE && <p>{error}</p>}
+          {error !== READ_ONLY_NOTICE && <p>{localizeMessage(error)}</p>}
           {editing && (
             <>
               <button
@@ -231,7 +237,7 @@ export function SettingsPage({
                   void copy();
                 }}
               >
-                複製草稿
+                {t('copyDraft')}
               </button>
               {blocked && (
                 <button
@@ -241,7 +247,7 @@ export function SettingsPage({
                     void reload();
                   }}
                 >
-                  放棄草稿並重新載入
+                  {t('discardDraftAndReload')}
                 </button>
               )}
             </>
@@ -251,21 +257,21 @@ export function SettingsPage({
       {shown && (
         <>
           <section className="home-card">
-            <h2>旅行資訊</h2>
+            <h2>{t('tripDetails')}</h2>
             <fieldset className="trip-fields" disabled={!editing || busy || blocked}>
               <label>
-                旅行名稱
+                {t('tripName')}
                 <input
-                  aria-label="旅行名稱"
+                  aria-label={t('tripName')}
                   maxLength={100}
                   value={shown.tripName}
                   onChange={(event) => change('tripName', event.target.value)}
                 />
               </label>
               <label>
-                副標題
+                {t('subtitle')}
                 <input
-                  aria-label="副標題"
+                  aria-label={t('subtitle')}
                   maxLength={200}
                   value={shown.subtitle}
                   onChange={(event) => change('subtitle', event.target.value)}
@@ -273,18 +279,18 @@ export function SettingsPage({
               </label>
               <div className="date-fields">
                 <label>
-                  開始日期
+                  {t('startDate')}
                   <input
-                    aria-label="開始日期"
+                    aria-label={t('startDate')}
                     type="date"
                     value={shown.startDate}
                     onChange={(event) => change('startDate', event.target.value)}
                   />
                 </label>
                 <label>
-                  結束日期
+                  {t('endDate')}
                   <input
-                    aria-label="結束日期"
+                    aria-label={t('endDate')}
                     type="date"
                     value={shown.endDate}
                     onChange={(event) => change('endDate', event.target.value)}
@@ -292,7 +298,27 @@ export function SettingsPage({
                 </label>
               </div>
               <fieldset className="theme-options">
-                <legend>主題色</legend>
+                <legend>{t('languageLabel')}</legend>
+                {(
+                  [
+                    { value: 'zh-TW', label: '繁體中文' },
+                    { value: 'en', label: 'English' },
+                  ] as const
+                ).map((option) => (
+                  <label className="theme-option" key={option.value}>
+                    <input
+                      type="radio"
+                      name="language"
+                      value={option.value}
+                      checked={(shown.language || 'zh-TW') === option.value}
+                      onChange={() => change('language', option.value)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset className="theme-options">
+                <legend>{t('themeColor')}</legend>
                 {THEMES.map((color) => (
                   <label className="theme-option" key={color.value}>
                     <input
@@ -308,17 +334,21 @@ export function SettingsPage({
                 ))}
               </fieldset>
               {!THEMES.some((color) => color.value === shown.themeColor.toLowerCase()) && (
-                <p>目前自訂色：{shown.themeColor}；可保留或選擇上方主題色。</p>
+                <p>
+                  {t('customColorPrefix')}
+                  {shown.themeColor}
+                  {t('customColorSuffix')}
+                </p>
               )}
             </fieldset>
-            <p>縮短日期範圍不會刪除原行程；範圍外的資料仍留在 Sheets，但不顯示於日期列。</p>
+            <p>{t('dateRangeHelp')}</p>
           </section>
           <section className="day-summary settings-preview">
             <div className="summary-copy">
               <span className="summary-date">
-                {editing ? '草稿預覽 · 尚未儲存' : '網站主題預覽'}
+                {editing ? t('draftPreviewUnsaved') : t('themePreview')}
               </span>
-              <h2>{shown.tripName || '旅行名稱'}</h2>
+              <h2>{shown.tripName || t('tripName')}</h2>
               <p>{shown.subtitle}</p>
               <span className="summary-date">
                 {shown.startDate} — {shown.endDate}
@@ -328,12 +358,20 @@ export function SettingsPage({
         </>
       )}
       <p className="sync-status" role="status">
-        {busy ? '正在處理…' : status}
+        {busy ? t('processing') : localizeMessage(status)}
       </p>
       <footer>
-        <a href={`/${spreadsheetId}`}>← 返回每日行程</a>
-        <p>Done 儲存／Cancel 放棄，不自動儲存。</p>
+        <a href={`/${spreadsheetId}`}>{t('backToItinerary')}</a>
+        <p>{t('doneToSaveCancelToDiscardChangesAreNotSavedAutomatically')}</p>
       </footer>
     </main>
+  );
+}
+
+export function SettingsPage(props: Parameters<typeof SettingsPageContent>[0]) {
+  return (
+    <TripLanguageProvider language={props.initialSettings?.language}>
+      <SettingsPageContent {...props} />
+    </TripLanguageProvider>
   );
 }

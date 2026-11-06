@@ -1,7 +1,6 @@
 import { TripHeader } from '@/components/trip/trip-header';
-import { SyncStatus } from '@/components/shared/sync-status';
-import { CreateTripForm } from '@/components/trip/create-trip-form';
-import { AuthPanel } from '@/components/auth/auth-panel';
+import { CreateTripPage } from '@/components/trip/create-trip-page';
+import { CreateTripSignIn } from '@/components/auth/create-trip-sign-in';
 import { authConfig } from '@/lib/auth/config';
 import { currentUser } from '@/lib/auth/server';
 export const dynamic = 'force-dynamic';
@@ -11,6 +10,7 @@ export default async function Home({
   searchParams: Promise<{ authError?: string }>;
 }) {
   const [session, query] = await Promise.all([currentUser(), searchParams]);
+  if (session?.googleAuthorized) return <CreateTripPage />;
   return (
     <main className="page-shell">
       <TripHeader />
@@ -21,8 +21,9 @@ export default async function Home({
           <strong>一趟旅行，一份 Google Sheets。</strong>
         </p>
       </section>
-      <AuthPanel configured={Boolean(authConfig())} session={session} error={query.authError} />
-      {session?.googleAuthorized && <CreateTripForm />}
+      {!session?.googleAuthorized && (
+        <CreateTripSignIn configured={Boolean(authConfig())} error={query.authError} />
+      )}
       <aside className="share-note">
         <span aria-hidden="true">↗</span>
         <p>
@@ -31,7 +32,6 @@ export default async function Home({
           建立旅行時，會將試算表設為任何知道連結的人都可檢視。請勿填入敏感資料。
         </p>
       </aside>
-      <SyncStatus state="disconnected" />
       <footer>
         <a href="/privacy">隱私權政策</a>
       </footer>

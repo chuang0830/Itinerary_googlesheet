@@ -1,6 +1,9 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import { useEffect, useState } from 'react';
 export function TripAccessNotice({ canEdit = false }: { canEdit?: boolean }) {
+  const { t, localizeMessage } = useTripLanguage();
+
   const [message, setMessage] = useState('');
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -17,7 +20,7 @@ export function TripAccessNotice({ canEdit = false }: { canEdit?: boolean }) {
   }, []);
   return message && !canEdit ? (
     <aside className="auth-message" role="status">
-      {message}
+      {localizeMessage(message)}
     </aside>
   ) : null;
 }

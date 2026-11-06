@@ -1,4 +1,5 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import { useEffect, useId, useRef, useState } from 'react';
 export function ShareTrip({
   spreadsheetId,
@@ -9,6 +10,8 @@ export function ShareTrip({
   tripName?: string;
   menu?: boolean;
 }) {
+  const { t, localizeMessage } = useTripLanguage();
+
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [url, setUrl] = useState('');
@@ -55,28 +58,25 @@ export function ShareTrip({
   return (
     <>
       <button type="button" className={menu ? 'menu-action' : 'button button-quiet'} onClick={open}>
-        {menu ? '👥 Share · 分享旅行' : '↗ Share'}
+        {menu ? t('menuShareTrip') : t('shareButton')}
       </button>
       <dialog ref={dialog} className="share-dialog" aria-labelledby={titleId}>
         <div className="share-dialog-heading">
-          <h2 id={titleId}>分享這趟旅行</h2>
+          <h2 id={titleId}>{t('shareThisTrip')}</h2>
           <button
             type="button"
             className="button button-quiet"
-            aria-label="關閉分享視窗"
+            aria-label={t('closeSharingDialog')}
             onClick={() => dialog.current?.close()}
           >
             ×
           </button>
         </div>
-        <p>
-          知道連結的人不需登入即可查看。分享網址不會授予編輯權限；協作者仍需透過 Google Sheets
-          共用設定加入。
-        </p>
+        <p>{t('shareDialogHelp')}</p>
         <label className="share-url-label">
-          旅行網址
+          {t('tripUrl')}
           <input
-            aria-label="旅行網址"
+            aria-label={t('tripUrl')}
             readOnly
             value={url}
             onFocus={(event) => event.currentTarget.select()}
@@ -91,7 +91,7 @@ export function ShareTrip({
               void copy();
             }}
           >
-            複製旅行網址
+            {t('copyTripUrl')}
           </button>
           {nativeShare && (
             <button
@@ -102,18 +102,14 @@ export function ShareTrip({
                 void share();
               }}
             >
-              開啟系統分享
+              {t('shareWithAnotherApp')}
             </button>
           )}
         </div>
         <p className="share-result" role="status">
-          {busy ? '正在處理…' : status}
+          {busy ? t('processing') : localizeMessage(status)}
         </p>
-        {local && (
-          <p className="share-local-note">
-            目前是本機網址，朋友無法從自己的裝置開啟；正式部署後即可分享網站網址。
-          </p>
-        )}
+        {local && <p className="share-local-note">{t('localSharingWarning')}</p>}
       </dialog>
     </>
   );

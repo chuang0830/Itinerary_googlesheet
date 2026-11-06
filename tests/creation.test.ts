@@ -60,7 +60,7 @@ test('creates exactly four sheets, exact headers, and literal settings without i
   );
   const settingsRows = body.sheets[0].data[0].rowData;
   assert.equal(settingsRows[1].values[1].userEnteredValue.stringValue, '=IMPORTXML("test")');
-  assert.equal(settingsRows.length, 6);
+  assert.equal(settingsRows.length, 7);
   for (const sheet of body.sheets) {
     assert.deepEqual(
       sheet.data[0].rowData[0].values.map((cell) => cell.userEnteredValue.stringValue),

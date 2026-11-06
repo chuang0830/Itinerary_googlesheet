@@ -1,8 +1,10 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import { useEffect, useState } from 'react';
 import type { PublicUser } from '@/lib/auth/core';
 
 export function AccountAvatar() {
+  const { t } = useTripLanguage();
   const [user, setUser] = useState<PublicUser | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -22,8 +24,8 @@ export function AccountAvatar() {
     <span
       className="account-avatar"
       role="img"
-      title={`已登入：${user.name}`}
-      aria-label={`已登入：${user.name}`}
+      title={`${t('signedInAs')}${user.name}`}
+      aria-label={`${t('signedInAs')}${user.name}`}
     >
       {initial}
     </span>

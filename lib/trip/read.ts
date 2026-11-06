@@ -71,7 +71,11 @@ export function parseTripSheets(sheets: Record<SheetName, unknown[][]>): TripDat
     if (settingsValues.has(key)) throw new TripReadError(`Settings 出現重複設定：${key}。`);
     settingsValues.set(key, row[1]);
   }
+  const language = settingsValues.get('language');
+  if (language !== undefined && language !== 'zh-TW' && language !== 'en')
+    throw new TripReadError('Settings language 必須為 zh-TW 或 en。');
   const settings: TripSettings = {
+    ...(language ? { language: language as 'zh-TW' | 'en' } : {}),
     tripName: text(settingsValues.get('tripName')),
     subtitle: text(settingsValues.get('subtitle')),
     startDate: isoDate(settingsValues.get('startDate')),

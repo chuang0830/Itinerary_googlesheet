@@ -30,7 +30,10 @@ export function parseCreateTrip(input: unknown): TripSettings {
     throw new TripInputError('請輸入有效日期，結束日期不可早於開始日期。');
   if (typeof value.themeColor !== 'string' || !/^#[a-fA-F0-9]{6}$/.test(value.themeColor))
     throw new TripInputError('主題色格式不正確。');
+  if (value.language !== undefined && !['zh-TW', 'en'].includes(String(value.language)))
+    throw new TripInputError('請選擇中文或英文。');
   return {
+    ...(value.language !== undefined ? { language: value.language as 'zh-TW' | 'en' } : {}),
     tripName: value.tripName.trim(),
     subtitle: value.subtitle.trim(),
     startDate: value.startDate,
@@ -59,7 +62,10 @@ export function spreadsheetBody(settings: TripSettings) {
   return {
     properties: { title: settings.tripName },
     sheets: Object.entries(HEADERS).map(([title, headers], sheetId) => {
-      const rows = title === 'Settings' ? [headers, ...Object.entries(settings)] : [headers];
+      const rows =
+        title === 'Settings'
+          ? [headers, ...Object.entries({ ...settings, language: settings.language || 'zh-TW' })]
+          : [headers];
       return {
         properties: {
           sheetId,

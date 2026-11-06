@@ -1,4 +1,5 @@
 'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import { useEffect, useRef, useState } from 'react';
 export function TripMenu({
   spreadsheetId,
@@ -8,6 +9,8 @@ export function TripMenu({
   disabled?: boolean;
   tripName?: string;
 }) {
+  const { t } = useTripLanguage();
+
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -50,7 +53,7 @@ export function TripMenu({
         type="button"
         ref={button}
         className="button menu-toggle"
-        aria-label="旅行選單"
+        aria-label={t('tripMenu')}
         aria-expanded={open}
         disabled={disabled}
         onClick={() => setOpen((value) => !value)}
@@ -58,29 +61,33 @@ export function TripMenu({
         ☰
       </button>
       {open && !disabled && (
-        <nav aria-label="Travel Planner" className="menu-panel">
-          <strong>Travel Planner</strong>
-          <a href={`/${spreadsheetId}`}>📅 Trip Itinerary · 每日行程</a>
-          <a href={`/${spreadsheetId}/accommodation`}>🏨 Accommodation · 住宿</a>
-          <a href={`/${spreadsheetId}/transportation`}>🚆 Transportation · 交通</a>
-          <a href={`/${spreadsheetId}/settings`}>⚙️ Settings · 網站設定</a>
+        <nav aria-label={'Travel Planner'} className="menu-panel">
+          <strong>{'Travel Planner'}</strong>
+          <a href={`/${spreadsheetId}`}>{t('menuItinerary')}</a>
+          <a href={`/${spreadsheetId}/accommodation`}>{t('menuAccommodation')}</a>
+          <a href={`/${spreadsheetId}/transportation`}>{t('menuTransportation')}</a>
+          <a href={`/${spreadsheetId}/settings`}>{t('menuSettings')}</a>
           <hr />
           <a
             target="_blank"
             rel="noopener noreferrer"
             href={`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`}
           >
-            📊 Open Google Sheets ↗
+            {t('menuGoogleSheets')}
+          </a>
+          <a href="/#create-trip">
+            <span aria-hidden="true">🌍 </span>
+            {t('createNewTrip')}
           </a>
           {signedIn === true && (
             <form action="/api/auth/signout" method="post">
               <input type="hidden" name="returnTo" value={`/${spreadsheetId}`} />
               <button type="submit" className="menu-action">
-                登出
+                <span aria-hidden="true">🚪</span>
+                {t('signOut')}
               </button>
             </form>
           )}
-          {signedIn === false && <a href="/">建立新旅行</a>}
         </nav>
       )}
     </div>

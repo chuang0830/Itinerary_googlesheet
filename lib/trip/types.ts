@@ -5,6 +5,7 @@ export type TripSettings = {
   startDate: string;
   endDate: string;
   themeColor: string;
+  language?: 'zh-TW' | 'en';
 };
 export type ItineraryRow = { Date: string; Activity: string; MapURL: string };
 export type AccommodationRow = {

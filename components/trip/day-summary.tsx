@@ -1,3 +1,6 @@
+'use client';
+import { transportTypeKeys } from '@/lib/trip/translations';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import type { AccommodationRow, TransportationRow } from '@/lib/trip/types';
 import { MapLinkIcon } from '@/components/shared/map-link-icon';
 function safeLink(value: string) {
@@ -16,31 +19,39 @@ export function DaySummary({
   stays: AccommodationRow[];
   transport: TransportationRow[];
 }) {
+  const { t } = useTripLanguage();
+
   if (!stays.length && !transport.length) return null;
   const title = transport.length
     ? transport.map((row) => `${row.From} → ${row.To}`).join(' / ')
     : [...new Set(stays.map((row) => row.City).filter(Boolean))].join(' / ');
   return (
-    <section className="day-summary" aria-label="Accommodation and transportation">
+    <section className="day-summary" aria-label={t('dailyTravelInfo')}>
       <div className="summary-copy">
         <span className="summary-date">{date}</span>
         {title && <h2>{title}</h2>}
         {transport.map((item, index) => (
           <div className="flight-summary" key={index}>
             <span className="hotel-label">
-              {item.Type.toUpperCase()} · {item.From} → {item.To}
+              {t(transportTypeKeys[item.Type]).toUpperCase()}
+              {' · '}
+              {item.From}
+              {' → '}
+              {item.To}
             </span>
             <strong>
-              {item.DepartureDate} {item.DepartureTime} → {item.ArrivalDate} {item.ArrivalTime}
+              {item.DepartureDate} {item.DepartureTime}
+              {' → '}
+              {item.ArrivalDate} {item.ArrivalTime}
             </strong>
             <span>
               {[item.Carrier, item.Number].filter(Boolean).join(' · ')}
               {safeLink(item.BookingURL) && (
                 <>
                   {' '}
-                  ·{' '}
+                  {' · '}{' '}
                   <a href={item.BookingURL} target="_blank" rel="noopener noreferrer">
-                    訂票連結 ↗
+                    {t('bookingLink')}
                   </a>
                 </>
               )}
@@ -50,7 +61,10 @@ export function DaySummary({
         {stays.map((stay, index) => (
           <div className="hotel-summary" key={index}>
             <span className="hotel-label">
-              STAY · {stay.CheckIn} – {stay.CheckOut}
+              {t('stayLabel')}
+              {stay.CheckIn}
+              {' – '}
+              {stay.CheckOut}
             </span>
             {safeLink(stay.MapURL) ? (
               <a href={stay.MapURL} target="_blank" rel="noopener noreferrer">

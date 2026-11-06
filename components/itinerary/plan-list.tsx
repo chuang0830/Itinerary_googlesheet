@@ -1,9 +1,13 @@
+'use client';
+import { useTripLanguage } from '@/components/trip/trip-language';
 import type { ItineraryRow } from '@/lib/trip/types';
 import { MapLinkIcon } from '@/components/shared/map-link-icon';
 export function PlanList({ plans }: { plans: ItineraryRow[] }) {
+  const { t } = useTripLanguage();
+
   return (
-    <section className="plan-list" aria-label="Itinerary cards">
-      {!plans.length && <p className="empty-state">No plans for today yet.</p>}
+    <section className="plan-list" aria-label={t('itineraryCards')}>
+      {!plans.length && <p className="empty-state">{t('noPlansToday')}</p>}
       {plans.map((plan, index) => {
         let hasLink = false;
         try {
@@ -21,7 +25,7 @@ export function PlanList({ plans }: { plans: ItineraryRow[] }) {
                 href={plan.MapURL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Open map: ${plan.Activity}`}
+                aria-label={`${t('openMap')} ${plan.Activity}`}
               >
                 <MapLinkIcon />
               </a>
