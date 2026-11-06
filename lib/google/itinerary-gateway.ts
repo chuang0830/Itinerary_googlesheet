@@ -60,7 +60,7 @@ export function sheetGateway(
         };
       };
       const query = new URLSearchParams({
-        ranges: `${name}!A:${name === 'Settings' ? 'B' : name === 'Itinerary' ? 'C' : name === 'Accommodation' ? 'E' : 'J'}`,
+        ranges: `${name}!A:${name === 'Settings' ? 'B' : name === 'Itinerary' ? 'C' : name === 'Accommodation' ? 'E' : 'I'}`,
         fields: 'sheets(properties,data(rowData(values(userEnteredValue))))',
       });
       const meta = await request<{

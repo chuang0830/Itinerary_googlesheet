@@ -5,7 +5,7 @@ export const PUBLIC_RANGES = [
   'Settings!A:B',
   'Itinerary!A:C',
   'Accommodation!A:E',
-  'Transportation!A:J',
+  'Transportation!A:I',
 ];
 export async function readPublicTrip(
   id: string,

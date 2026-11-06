@@ -32,7 +32,6 @@ const labels: Record<string, TranslationKey> = {
   ArrivalTime: 'arrivalTime',
   Carrier: 'carrier',
   Number: 'serviceNumber',
-  BookingURL: 'bookingUrl',
 };
 type Draft = Record<string, string>;
 function ManagedPageContent({
@@ -237,7 +236,7 @@ function ManagedPageContent({
           />
           <a className="brand" href={`/${spreadsheetId}`}>
             {'TRAVEL'}
-            <span>✳</span>
+            <span>&nbsp;</span>
             {'PLANNER'}
           </a>
         </div>

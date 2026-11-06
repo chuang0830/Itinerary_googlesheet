@@ -61,7 +61,8 @@ export function parseTripSheets(sheets: Record<SheetName, unknown[][]>): TripDat
       throw new TripReadError(`${name} 工作表的欄位名稱或順序不正確。`);
     return values.slice(1).flatMap((row, index) => {
       if (!Array.isArray(row)) throw new TripReadError(`${name} 第 ${index + 2} 列格式不正確。`);
-      if (row.every((value) => text(value) === '')) return [];
+      const used = name === 'Transportation' ? row.slice(0, expected.length) : row;
+      if (used.every((value) => text(value) === '')) return [];
       return [{ row, number: index + 2 }];
     });
   }
@@ -141,7 +142,6 @@ export function parseTripSheets(sheets: Record<SheetName, unknown[][]>): TripDat
       ArrivalTime,
       Carrier: text(row[7]),
       Number: text(row[8]),
-      BookingURL: externalLink(row[9]),
     };
   });
   return { settings, itinerary, accommodation, transportation };

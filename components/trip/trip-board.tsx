@@ -110,7 +110,7 @@ function TripBoardContent({
           />
           <a className="brand" href="/">
             {'TRAVEL'}
-            <span>✳</span>
+            <span>&nbsp;</span>
             {'PLANNER'}
           </a>
         </div>

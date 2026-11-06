@@ -44,18 +44,7 @@ export function DaySummary({
               {' → '}
               {item.ArrivalDate} {item.ArrivalTime}
             </strong>
-            <span>
-              {[item.Carrier, item.Number].filter(Boolean).join(' · ')}
-              {safeLink(item.BookingURL) && (
-                <>
-                  {' '}
-                  {' · '}{' '}
-                  <a href={item.BookingURL} target="_blank" rel="noopener noreferrer">
-                    {t('bookingLink')}
-                  </a>
-                </>
-              )}
-            </span>
+            <span>{[item.Carrier, item.Number].filter(Boolean).join(' · ')}</span>
           </div>
         ))}
         {stays.map((stay, index) => (

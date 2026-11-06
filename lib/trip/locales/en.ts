@@ -72,8 +72,6 @@ const en: Record<TranslationKey, string> = {
   arrivalTime: 'Arrival time',
   carrier: 'Airline / operator',
   serviceNumber: 'Flight / service number',
-  bookingUrl: 'Booking link',
-  bookingLink: 'Booking link ↗',
   accommodationTitle: 'Accommodation',
   transportationTitle: 'Transportation',
   checkInIncludesThatNightCheckOutDoesNot: 'Check-in includes that night; check-out does not.',
@@ -276,5 +274,58 @@ const en: Record<TranslationKey, string> = {
   googleSignInAndCreateTrip: 'Sign in with Google to create a trip',
   loadingTrip: 'Loading trip…',
   loadingTripDescription: 'Fetching the latest data from Google Sheets.',
+  privacyEyebrow: 'TRAVEL PLANNER · PRIVACY',
+  privacyUpdated: 'Last updated: November 4, 2026',
+  privacyIntro:
+    'Travel Planner is a website for managing and sharing trips with Google Sheets. This policy explains what data the service processes, why it is used, how it is stored, and how you can control it.',
+  privacyDataTitle: 'Data we use and why',
+  privacyAccountData:
+    'Google account identifier, name, and email: to identify signed-in users, display account information, and identify the user creating a trip.',
+  privacyOAuthData:
+    'Google OAuth credentials: to call Google APIs on the server on behalf of the current user. Access tokens and refresh tokens are not provided to the browser.',
+  privacyTripData:
+    'Trip spreadsheets: to read and update Settings, Itinerary, Accommodation, and Transportation, providing trip details, ordering, accommodation, transportation, and settings.',
+  privacyCollaboratorData:
+    'File permissions and collaborator information: to check whether the current account can edit and display collaborator names, roles, and account initials to signed-in users whom Google permits to access the file.',
+  privacyScopes:
+    'We currently request basic account information and the drive.file scope to access files created through or separately authorized for this application. We do not request access to your entire Google Drive. Google Sheets sharing access does not automatically authorize this application to access the file.',
+  privacyPublicTitle: 'Public trips and sharing permissions',
+  privacyPublicNotice:
+    'Before creating a trip, you must confirm that the new spreadsheet will be viewable by anyone with the link. Anyone with the website or spreadsheet link can read trip content without signing in. Do not include sensitive information such as passports, payment details, or booking passwords.',
+  privacyPermissions:
+    'Editing permissions are managed by Google Sheets and Drive. Each write uses the current user’s own authorization. Sharing the website URL does not grant editing access. Signed-out visitors cannot access the collaborator list. Signed-in viewers may see member information that Google permits, but this does not grant editing rights.',
+  privacyStorageTitle: 'Data storage and security',
+  privacyTripStorage:
+    'The spreadsheet in your Google Drive is the sole persistent source of trip content. We do not maintain a separate trip-content database. The website temporarily processes trip content when handling requests and displaying pages.',
+  privacySessionStorage:
+    'In production, Upstash Redis stores sign-in data encrypted with AES-256-GCM. Sessions last up to 24 hours; sign-in flow data lasts up to 10 minutes. Signing out deletes the current session. Trip-creation request summaries, status, and spreadsheet identifiers are temporarily stored for up to 24 hours to prevent duplicate creation and support sharing retries; they do not include trip content.',
+  privacyBrowserStorage:
+    'The browser uses necessary sign-in cookies and may store trip-creation request identifiers in session storage to recover creation progress. Unsaved editing drafts remain in page memory and are not written to Google Sheets until you choose Done.',
+  privacyProvidersTitle: 'Service providers and data sharing',
+  privacyProviders:
+    'Google provides sign-in, Sheets, and Drive features; Vercel hosts the website and server; Upstash stores the temporary data described above. Providers process data necessary to deliver the service, potentially outside your country. Hosting services may process operational records such as IP addresses, request times, and errors; retention depends on provider policies and service configuration.',
+  privacyNoSale:
+    'We do not sell Google user data or use it for advertising, data brokerage, or training general-purpose AI models.',
+  privacyGooglePolicyPrefix:
+    'Our use and transfer of Google API and Google Workspace data complies with the ',
+  privacyGooglePolicySuffix: ', including the Limited Use requirements.',
+  privacyControlTitle: 'Revoking access, deleting data, and contact',
+  privacySignOut:
+    'Use Sign out to delete the current session. Sign out separately on other devices, or wait for those sessions to expire.',
+  privacyRevokePrefix: 'You can revoke this service’s authorization in your ',
+  privacyConnectionsLink: 'Google Account third-party connections settings',
+  privacyRevokeSuffix:
+    '. Revoking authorization does not automatically delete spreadsheets or disable their public sharing.',
+  privacyDeleteTrip:
+    'You can delete trip files in Google Drive or modify them in Google Sheets. Use Sheets sharing settings to remove editors or disable link-based public access. Once public access is disabled, this website can no longer publicly display the trip.',
+  privacyContactPrefix:
+    'For questions about data use or requests to delete data, contact the service administrator at ',
+  privacyContactSuffix:
+    '. Do not include Google passwords, OAuth tokens, or other secrets in your email.',
+  privacyUpdatesTitle: 'Policy updates',
+  privacyUpdates:
+    'If our data-handling practices change, we will update this page and its update date. New Google authorization scopes will require separate user authorization.',
+  privacyBackHome: '← Back to home',
+  privacyEnglishSwitch: 'Use English',
 };
 export default en;

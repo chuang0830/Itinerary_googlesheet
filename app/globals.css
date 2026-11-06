@@ -734,6 +734,7 @@ a.button {
 }
 .trip-fields {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 15px;
   border: 0;
   padding: 0;
@@ -743,6 +744,7 @@ a.button {
 .trip-fields > label,
 .date-fields label {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   color: var(--ink);
   font-size: 12px;
@@ -751,6 +753,7 @@ a.button {
 }
 .trip-fields input:not([type='radio']):not([type='checkbox']) {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   padding: 11px 10px;
   border: 1px solid #dfe5dc;
@@ -761,8 +764,23 @@ a.button {
 }
 .date-fields {
   display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+.trip-fields input[type='date'],
+.trip-fields input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  min-inline-size: 0;
+}
+.trip-fields input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
 }
 .theme-options {
   display: flex;
@@ -812,11 +830,6 @@ a.button {
   width: 100%;
   min-height: 44px;
   font-size: 13px;
-}
-@media (max-width: 370px) {
-  .date-fields {
-    grid-template-columns: 1fr;
-  }
 }
 .intro h1 {
   overflow-wrap: anywhere;
@@ -1178,6 +1191,19 @@ a.button {
   color: var(--green);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+.language-switch .is-selected {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .account-avatar {

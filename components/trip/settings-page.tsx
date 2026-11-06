@@ -165,7 +165,7 @@ function SettingsPageContent({
           />
           <a className="brand" href={`/${spreadsheetId}`}>
             {'TRAVEL'}
-            <span>✳</span>
+            <span>&nbsp;</span>
             {'PLANNER'}
           </a>
         </div>

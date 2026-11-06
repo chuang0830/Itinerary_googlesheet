@@ -55,7 +55,6 @@ export const HEADERS = {
     'ArrivalTime',
     'Carrier',
     'Number',
-    'BookingURL',
   ],
 };
 export function spreadsheetBody(settings: TripSettings) {

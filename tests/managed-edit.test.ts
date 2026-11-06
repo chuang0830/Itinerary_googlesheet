@@ -23,7 +23,6 @@ const train = {
   ArrivalTime: '20:00',
   Carrier: '12',
   Number: '12',
-  BookingURL: '',
 };
 function fixture(sheet: ManagedSheet) {
   let raw: RawItinerary = {
@@ -100,7 +99,7 @@ test('multiple transport records normalize type and keep dates/times as ISO text
   assert.equal((result.rows[0] as typeof train).Type, 'Train');
   assert.deepEqual(f.raw().values[1], Object.values(train));
 });
-test('invalid lodging date bounds, invalid calendar dates, and invalid booking URLs fail before writing', async () => {
+test('invalid lodging date bounds, invalid calendar dates, and invalid map URLs fail before writing', async () => {
   const f = fixture('Accommodation');
   const start = await loadManaged('Accommodation', f.gateway);
   await assert.rejects(
@@ -112,7 +111,7 @@ test('invalid lodging date bounds, invalid calendar dates, and invalid booking U
     ItineraryError,
   );
   assert.throws(
-    () => submittedManagedRows('Transportation', [{ ...train, BookingURL: 'javascript:alert(1)' }]),
+    () => submittedManagedRows('Accommodation', [{ ...stay, MapURL: 'javascript:alert(1)' }]),
     ItineraryError,
   );
   assert.equal(f.writes(), 0);
@@ -177,7 +176,7 @@ test('write failure and post-write divergence never return a successful sync', a
 test('write ranges clear only managed columns, preserve formatting, and use literal stringValue', () => {
   for (const [sheet, row, width] of [
     ['Accommodation', stay, 5],
-    ['Transportation', train, 10],
+    ['Transportation', train, 9],
   ] as const) {
     const f = fixture(sheet);
     const body = managedWrite(
@@ -239,4 +238,31 @@ test('native Sheets dates normalize, and saved stays/overnight transport integra
   assert.equal(dailyData(trip, '2026-11-15').stays.length, 1);
   assert.equal(dailyData(trip, '2026-11-18').stays.length, 0);
   assert.equal(dailyData(trip, '2026-11-16').transport.length, 1);
+});
+
+test('legacy BookingURL is ignored and transportation writes never touch column J', () => {
+  const raw: RawItinerary = {
+    sheetId: 3,
+    rowCount: 100,
+    values: [
+      [...HEADERS.Transportation, 'BookingURL'],
+      [...Object.values(train), 'javascript:legacy-value'],
+      ['', '', '', '', '', '', '', '', '', 'https://legacy.example/'],
+    ],
+  };
+  const rows = managedRows('Transportation', raw.values);
+  assert.deepEqual(rows, [train]);
+  assert.ok(!('BookingURL' in rows[0]));
+  const input = submittedManagedRows('Transportation', [{ ...train, BookingURL: 'ignored' }]);
+  const body = managedWrite('Transportation', raw, input) as {
+    requests: {
+      updateCells: { range: { endColumnIndex: number }; rows: { values: unknown[] }[] };
+    }[];
+  };
+  const update = body.requests[0].updateCells;
+  assert.equal(update.range.endColumnIndex, 9);
+  assert.ok(update.rows.every((row) => row.values.length === 9));
+  assert.equal(raw.values[1][9], 'javascript:legacy-value');
+  assert.equal(HEADERS.Transportation.length, 9);
+  assert.ok(!HEADERS.Transportation.includes('BookingURL'));
 });

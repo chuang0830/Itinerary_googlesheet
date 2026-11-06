@@ -25,6 +25,5 @@ export type TransportationRow = {
   ArrivalTime: string;
   Carrier: string;
   Number: string;
-  BookingURL: string;
 };
 export type SyncState = 'disconnected' | 'saving' | 'synced' | 'error';

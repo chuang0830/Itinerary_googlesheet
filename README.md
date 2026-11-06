@@ -32,6 +32,8 @@ yarn dev
 
 開啟 http://localhost:3000。Google 登入須先依 [本機 OAuth 設定指南](docs/google-oauth-setup.md) 設定 `.env.local`。請勿將 Client Secret 貼進聊天或提交至 Git。
 
+開發服務也接受區域網路連線。同一個 Wi-Fi 的手機可開啟 `http://電腦的區域網路IP:3000` 查看公開旅行；旅行頁在網址後加上 Spreadsheet ID。Google 登入仍使用原本的 localhost OAuth 設定，區域網路 IP 不支援此登入流程。更改啟動設定後需重啟 `yarn dev`。
+
 ```sh
 yarn test
 yarn typecheck
